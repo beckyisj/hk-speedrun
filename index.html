@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A 10-minute game about one chaotic day in Hong Kong: MTR seat wars, cha chaan teng slang, yum cha carts, Mong Kok drips, minibus shouting and nano flats.">
+<meta property="og:title" content="Hong Kong Speedrun">
+<meta property="og:description" content="Six rounds of one ordinary day in the world's most efficient city. Aunties included.">
+<title>Hong Kong Speedrun</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Noto+Sans+HK:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:dark;
+    --ink:#120c1c; --panel:rgba(20,13,32,.95); --red:#ff3355; --jade:#19c39a;
+    --cyan:#43d9ff; --amber:#ffb627; --cream:#f5ead0; --dim:#a597bf;
+  }
+  html,body{height:100%}
+  body{background:var(--ink);color:var(--cream);font-family:"Noto Sans HK","PingFang HK","Microsoft JhengHei",system-ui,sans-serif;overflow:hidden;padding-inline:16px;box-sizing:border-box}
+  #app{height:100%;display:grid;place-items:center}
+  #wrap{position:relative;container-type:size;max-width:100%}
+  canvas{display:block;width:100%;height:100%;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 0 0 1px #ffffff14,0 20px 60px #000a}
+  .ov{position:absolute;inset:0;display:grid;place-items:center;padding:4cqw;box-sizing:border-box;background:rgba(10,6,18,.55);border-radius:14px}
+  .ov[hidden]{display:none}
+  .card{width:100%;max-height:100%;overflow:auto;box-sizing:border-box;background:var(--panel);border:.4cqw solid var(--red);border-radius:3cqw;padding:5.5cqw 6cqw;box-shadow:0 0 5cqw rgba(255,51,85,.35),inset 0 0 3cqw rgba(255,51,85,.12);display:flex;flex-direction:column;gap:2.6cqw}
+  .eyebrow{font:400 2.8cqw/1.2 "Share Tech Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0}
+  h1{font:400 12.4cqw/.92 "Bungee","Arial Black",Impact,sans-serif;color:#ffe3e8;margin:0;text-shadow:0 0 1cqw #ff3355,0 0 3cqw #ff3355,0 0 7cqw rgba(255,51,85,.6);animation:flick 7s infinite}
+  h2{font:400 7.2cqw/1.02 "Bungee","Arial Black",Impact,sans-serif;color:var(--cream);margin:0;text-wrap:balance}
+  .lede{font:500 3.5cqw/1.45 "Noto Sans HK",system-ui,sans-serif;margin:0;color:var(--cream)}
+  .how{font:400 3.15cqw/1.55 "Noto Sans HK",system-ui,sans-serif;color:var(--dim);margin:0;border-top:1px dashed #ffffff26;padding-top:2.4cqw}
+  .how b{color:var(--cream);font-weight:700}
+  .day{list-style:none;margin:0;padding:0;display:grid;gap:1.1cqw}
+  .day li{display:grid;grid-template-columns:12cqw 1fr auto;align-items:baseline;gap:2cqw;font-size:3.4cqw;padding-bottom:1.1cqw;border-bottom:1px solid #ffffff12}
+  .clk{font-family:"Share Tech Mono",ui-monospace,monospace;color:var(--amber);font-variant-numeric:tabular-nums}
+  .zh{color:var(--dim)}
+  .row{display:flex;gap:2.4cqw;flex-wrap:wrap;margin-top:1cqw}
+  .btn{font:700 3.6cqw/1.1 "Noto Sans HK",system-ui,sans-serif;padding:3.2cqw 4.4cqw;border-radius:2cqw;border:0;cursor:pointer}
+  .btn.primary{background:var(--red);color:#fff;flex:1;box-shadow:0 .8cqw 0 #9b1430}
+  .btn.primary:active{transform:translateY(.6cqw);box-shadow:0 .2cqw 0 #9b1430}
+  .btn.ghost{background:transparent;color:var(--cream);border:.3cqw solid #ffffff33}
+  .btn:focus-visible{outline:.6cqw solid var(--cyan);outline-offset:.6cqw}
+  .meta{display:flex;justify-content:space-between;align-items:baseline}
+  .clk.big{font-size:9cqw}
+  .rnd{font:400 3cqw "Share Tech Mono",ui-monospace,monospace;color:var(--dim)}
+  .zhbig{font:900 5cqw/1 "Noto Sans HK",system-ui,sans-serif;color:var(--red);margin:0}
+  .score{display:flex;align-items:baseline;gap:1.5cqw}
+  .score .n{font:400 16cqw/1 "Bungee","Arial Black",sans-serif;color:var(--amber);font-variant-numeric:tabular-nums}
+  .score .d{font:400 3.6cqw "Share Tech Mono",ui-monospace,monospace;color:var(--dim)}
+  .stats{font:400 3.1cqw/1.5 "Share Tech Mono",ui-monospace,monospace;color:var(--cyan);margin:0}
+  .verdict{font:600 3.8cqw/1.45 "Noto Sans HK",system-ui,sans-serif;color:var(--cream);margin:0}
+  .small{font-size:2.9cqw;color:var(--dim);margin:0}
+  .bars{list-style:none;margin:0;padding:0;display:grid;gap:1.4cqw}
+  .bars li{display:grid;grid-template-columns:1fr 26cqw 7cqw;gap:2cqw;align-items:center;font-size:3cqw}
+  .bars b{text-align:right;font-family:"Share Tech Mono",ui-monospace,monospace;color:var(--amber)}
+  .bar{height:2cqw;background:#ffffff14;border-radius:1cqw;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--jade),var(--amber))}
+  .rank{color:var(--amber)}
+  @keyframes flick{0%,91%,100%{opacity:1}92%{opacity:.35}93%{opacity:1}95%{opacity:.6}96%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){h1{animation:none}}
+  [hidden]{display:none!important}
+  body{margin:0}
+</style>
+</head>
+<body>
+
+<div id="app"><div id="wrap"><canvas id="c" aria-label="Hong Kong Speedrun game"></canvas><div id="ov" class="ov"></div></div></div>
+
+<script>
+(()=>{
+'use strict';
+const W=540,H=720;
+const C={red:'#ff3355',pink:'#ff4fa3',jade:'#19c39a',cyan:'#43d9ff',amber:'#ffb627',cream:'#f5ead0',dim:'#a597bf'};
+const DISP='"Bungee","Arial Black",Impact,sans-serif';
+const BODY='"Noto Sans HK","PingFang HK","Microsoft JhengHei",system-ui,sans-serif';
+const MONO='"Share Tech Mono",ui-monospace,Menlo,monospace';
+const EMO='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+
+const cvs=document.getElementById('c');
+let ctx=cvs.getContext('2d');
+const wrap=document.getElementById('wrap'), ov=document.getElementById('ov');
+let viewK=1;
+function fit(){
+  const aw=Math.max(220,innerWidth-32), ah=Math.max(290,innerHeight-24);
+  const s=Math.min(aw/W,ah/H), dpr=Math.min(2.5,devicePixelRatio||1);
+  wrap.style.width=W*s+'px'; wrap.style.height=H*s+'px';
+  cvs.width=Math.round(W*s*dpr); cvs.height=Math.round(H*s*dpr); viewK=s*dpr;
+}
+addEventListener('resize',fit); fit();
+
+// ---------- helpers ----------
+const rand=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rand(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+function emo(ch,x,y,s){ctx.font=`${s}px ${EMO}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(ch,x,y);}
+function txt(s,x,y,size,color,align='center',font=BODY,weight=700){ctx.font=`${weight} ${size}px ${font}`;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillText(s,x,y);}
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function lines(s,maxW,font){ctx.font=font;const out=[];let cur='';for(const w of s.split(' ')){const t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){out.push(cur);cur=w;}else cur=t;}if(cur)out.push(cur);return out;}
+function para(s,x,y,maxW,size,color,lh,weight=600,font=BODY,align='center'){const L=lines(s,maxW,`${weight} ${size}px ${font}`);ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';L.forEach((l,i)=>ctx.fillText(l,x,y+i*lh));return L.length;}
+function makeLayer(fn){const c=document.createElement('canvas');c.width=W*2;c.height=H*2;const g=c.getContext('2d');g.scale(2,2);const old=ctx;ctx=g;fn();ctx=old;return c;}
+function sep(a,b,wa,wb){const dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy)||.01,o=a.r+b.r-d;if(o<=0)return false;const nx=dx/d,ny=dy/d;a.x+=nx*o*wa;a.y+=ny*o*wa;b.x-=nx*o*wb;b.y-=ny*o*wb;return true;}
+function neonV(text,x,y,color){const ch=[...text],h=ch.length*32+14,w=44;ctx.save();ctx.fillStyle='rgba(10,5,15,.88)';rr(x-w/2,y,w,h,6);ctx.fill();ctx.shadowColor=color;ctx.shadowBlur=14;ctx.strokeStyle=color;ctx.lineWidth=2.5;rr(x-w/2,y,w,h,6);ctx.stroke();ch.forEach((c,i)=>txt(c,x,y+23+i*32,26,color,'center',BODY,900));ctx.restore();}
+
+let pops=[];
+function pop(text,x,y,color=C.cream,size=22,life=1.2,tag=null){if(tag)pops=pops.filter(p=>p.tag!==tag);pops.push({text,x,y,t:0,color,size,life,tag,rise:tag?0:34});}
+function updPops(dt){for(const p of pops){p.t+=dt;p.y-=p.rise*dt;}pops=pops.filter(p=>p.t<p.life);}
+function drawPops(){for(const p of pops){const a=clamp((p.life-p.t)/.45,0,1);ctx.globalAlpha=a;ctx.font=`900 ${p.size}px ${BODY}`;const w=ctx.measureText(p.text).width;const x=clamp(p.x,w/2+8,W-w/2-8);ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=Math.max(3,p.size*.24);ctx.strokeStyle='rgba(10,6,18,.92)';ctx.strokeText(p.text,x,p.y);ctx.fillStyle=p.color;ctx.fillText(p.text,x,p.y);}ctx.globalAlpha=1;}
+let shake=0;
+
+// ---------- audio ----------
+let AC=null,muted=false;
+function initAudio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();}
+function tone(f,d,type='square',vol=.07,to){if(muted||!AC)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);}
+const sfx={
+  good(){tone(660,.09);setTimeout(()=>tone(990,.12),70);},
+  bad(){tone(170,.22,'sawtooth',.06,90);},
+  blip(){tone(880,.05,'square',.035);},
+  chime(){[659,523,392].forEach((f,i)=>setTimeout(()=>tone(f,.3,'sine',.09),i*230));},
+  octopus(){tone(1568,.14,'sine',.11);},
+  splash(){tone(500,.2,'triangle',.08,110);},
+  thunk(){tone(140,.12,'triangle',.12,70);},
+  shout(v){tone(200+v*2.5,.35,'sawtooth',.05,380+v*4);}
+};
+
+// ---------- input ----------
+const keys={};
+const pointer={x:0,y:0,down:false,type:'mouse'};
+function toL(e){const r=cvs.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H};}
+
+// ---------- HUD ----------
+function hud(st,scoreStr,rightStr){
+  ctx.fillStyle='rgba(12,8,20,.94)';ctx.fillRect(0,0,W,56);
+  txt(st.clock,16,29,19,C.amber,'left',MONO,400);
+  txt(st.title,80,30,16,C.cream,'left',DISP,400);
+  const low=!rightStr&&st.left<10;
+  const r=rightStr??`${Math.max(0,Math.ceil(st.left))}s`;
+  ctx.fillStyle=low?C.red:'#2a2040';rr(W-82,12,68,32,16);ctx.fill();
+  txt(r,W-48,29,18,low?'#fff':C.cream,'center',MONO,400);
+  txt(scoreStr,W-94,29,16,C.cream,'right',BODY,700);
+  if(!rightStr){ctx.fillStyle=C.red;ctx.fillRect(0,54,W*clamp(st.left/st.dur,0,1),2);}
+}
+const verdict=(s,L)=>s<30?L[0]:s<55?L[1]:s<80?L[2]:L[3];
+
+// =====================================================================
+// 1. MTR SEAT WARS
+// =====================================================================
+const SITTERS=['😴','🧑‍💼','👩‍💻','🧓','👨‍🎓','👩','🧔','🤳','👩‍🦱','🧑‍🦲'];
+const STATIONS=[['旺角','Mong Kok'],['油麻地','Yau Ma Tei'],['尖沙咀','Tsim Sha Tsui'],['金鐘','Admiralty'],['中環','Central'],['太子','Prince Edward'],['九龍塘','Kowloon Tong'],['鑽石山','Diamond Hill']];
+const mtr={
+  clock:'07:48',title:'MTR Seat Wars',zh:'港鐵搶位',dur:90,
+  blurb:'Kwun Tong line, peak hour. At every station a seat opens up — and three aunties with shopping trolleys have already clocked it.',
+  how:'<b>Move</b> with arrow keys / WASD, or press and drag. Touch a glowing <b>空位</b> (empty seat) before an auntie does. The train brakes at every station. Brace.',
+  init(){
+    this.pts=0;this.lost=0;this.seats=[];
+    const ys=[142,196,250,304,456,510,564,618];
+    for(const side of [0,1])for(const y of ys)this.seats.push({x:side?467:73,fx:side?428:112,y,side,who:pick(SITTERS),state:'full',g:0});
+    this.p={x:270,y:390,vx:0,vy:0,r:15,bump:0,sit:0,seat:null};
+    this.crowd=[];for(let i=0;i<9;i++)this.crowd.push({x:rand(150,390),y:rand(120,680),r:17,vx:0,vy:0,e:pick(['🧍','🧍‍♀️','🧍‍♂️','🙍','🙍‍♂️'])});
+    this.poles=[{x:270,y:230,r:8},{x:270,y:540,r:8}];
+    this.aunties=[];for(let i=0;i<3;i++)this.aunties.push(this.newAunty(rand(150,390),rand(130,660)));
+    this.respawn=[];this.nextOpen=1.2;this.nextAnn=2.5;this.ann=null;this.swayT=0;this.swayDir=1;this.stI=ri(0,STATIONS.length-1);this.bcd=0;
+    this.bg=makeLayer(()=>this.paintBg());
+  },
+  newAunty(x,y){return{x,y,r:18,hx:rand(150,390),hy:rand(130,660),target:null,react:rand(.25,.6),bonus:rand(-12,14)};},
+  openSeat(){const f=this.seats.filter(s=>s.state==='full'&&s!==this.p.seat);if(!f.length)return;const s=pick(f);s.state='empty';s.g=0;sfx.blip();pop('空位!',s.x+(s.side?-34:34),s.y-24,C.jade,18);},
+  update(dt){
+    const k=this.elapsed/this.dur,p=this.p;
+    this.nextAnn-=dt;
+    if(this.nextAnn<=0){const[zh,en]=STATIONS[this.stI++%STATIONS.length];this.ann={zh,en,t:3.4};this.nextAnn=12;sfx.chime();this.swayT=1.1;this.swayDir=Math.random()<.5?-1:1;this.openSeat();this.openSeat();}
+    if(this.ann){this.ann.t-=dt;if(this.ann.t<=0)this.ann=null;}
+    this.swayT-=dt;
+    const sway=this.swayT>0?this.swayDir*420:Math.sin(this.elapsed*1.4)*30;
+    this.nextOpen-=dt;if(this.nextOpen<=0){this.openSeat();this.nextOpen=rand(2.1,3.1)-k*1.2;}
+    for(const s of this.seats)s.g+=dt;
+    // player
+    if(p.sit>0){
+      p.sit-=dt;
+      if(p.sit<=0){const s=p.seat;s.who=pick(['👴','🤰','👵🏻','🧓']);p.x=s.fx+(s.side?-16:16);p.y=s.y;p.seat=null;pop('讓座 — gave it up to someone who needed it',270,s.y-40,C.cream,14,1.6);}
+    }else{
+      let ix=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),iy=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
+      if(pointer.down){const dx=pointer.x-p.x,dy=pointer.y-p.y,d=Math.hypot(dx,dy);if(d>8){ix=dx/d;iy=dy/d;}else{ix=0;iy=0;}}
+      const m=Math.hypot(ix,iy);if(m>0){ix/=m;iy/=m;}
+      const sp=p.bump>0?130:240,a=Math.min(1,dt*12);
+      p.vx+=(ix*sp-p.vx)*a;p.vy+=(iy*sp-p.vy)*a;
+      p.x+=p.vx*dt+sway*.45*dt;p.y+=p.vy*dt;p.bump-=dt;
+    }
+    for(const c of this.crowd){c.vx=clamp((c.vx+rand(-80,80)*dt)*.97,-25,25);c.vy=clamp((c.vy+rand(-80,80)*dt)*.97,-25,25);c.x+=c.vx*dt+sway*.35*dt;c.y+=c.vy*dt;}
+    // aunties
+    const empties=this.seats.filter(s=>s.state==='empty');
+    for(const a of this.aunties){
+      if(a.target&&a.target.state!=='empty')a.target=null;
+      if(!a.target){let best=null,bd=1e9;for(const s of empties){if(s.g<a.react)continue;if(this.aunties.some(o=>o!==a&&o.target===s))continue;const d=Math.hypot(s.fx-a.x,s.y-a.y);if(d<bd){bd=d;best=s;}}a.target=best;}
+      const tx=a.target?a.target.fx:a.hx,ty=a.target?a.target.y:a.hy;
+      const dx=tx-a.x,dy=ty-a.y,d=Math.hypot(dx,dy),sp=a.target?(125+k*80+a.bonus):40;
+      if(d>2){a.x+=dx/d*Math.min(d,sp*dt);a.y+=dy/d*Math.min(d,sp*dt);}
+      else if(!a.target){a.hx=rand(150,390);a.hy=rand(130,660);}
+      if(a.target&&d<10){const s=a.target;s.state='full';s.who='👵';a.dead=true;this.lost++;sfx.bad();pop('Auntie wins 😤',s.x+(s.side?-60:60),s.y,C.red,17);this.respawn.push(1.6);}
+    }
+    this.aunties=this.aunties.filter(a=>!a.dead);
+    for(let i=this.respawn.length-1;i>=0;i--){this.respawn[i]-=dt;if(this.respawn[i]<=0){this.respawn.splice(i,1);this.aunties.push(this.newAunty(Math.random()<.5?122:418,380));}}
+    // collisions
+    if(p.sit<=0){
+      for(const c of this.crowd){if(sep(p,c,.75,.25)){p.bump=.25;if(this.bcd<=0){this.bcd=1.3;pop(pick(['唔該借借!','Excuse me!','Mind the backpack!','📱 (does not look up)','Ow, my Octopus card']),c.x,c.y-28,C.cream,14);}}}
+      for(const a of this.aunties)sep(p,a,1,0);
+      for(const o of this.poles)sep(p,o,1,0);
+    }
+    this.bcd-=dt;
+    for(const a of this.aunties)for(const c of this.crowd)sep(c,a,1,0);
+    for(let i=0;i<this.crowd.length;i++)for(let j=i+1;j<this.crowd.length;j++)sep(this.crowd[i],this.crowd[j],.5,.5);
+    for(const c of this.crowd){for(const o of this.poles)sep(c,o,1,0);c.x=clamp(c.x,132,408);c.y=clamp(c.y,116,684);}
+    p.x=clamp(p.x,104,436);p.y=clamp(p.y,112,690);
+    if(p.sit<=0)for(const s of this.seats){if(s.state==='empty'&&Math.hypot(p.x-s.fx,p.y-s.y)<26){s.state='full';p.sit=.9;p.seat=s;this.pts++;sfx.good();pop('+1 坐低!',s.x+(s.side?-50:50),s.y-10,C.amber,22);break;}}
+  },
+  paintBg(){
+    ctx.fillStyle='#161b26';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#232a38';ctx.fillRect(100,100,340,600);
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+    for(let y=110;y<700;y+=18){ctx.beginPath();ctx.moveTo(100,y);ctx.lineTo(440,y);ctx.stroke();}
+    const ys=[142,196,250,304,456,510,564,618];
+    for(const side of [0,1]){
+      ctx.fillStyle='#3a4352';ctx.fillRect(side?440:0,100,100,600);
+      ctx.fillStyle='#6d7888';ctx.fillRect(side?444:46,114,50,218);ctx.fillRect(side?444:46,428,50,218);
+      for(const y of ys){const g=ctx.createLinearGradient(0,y-24,0,y+24);g.addColorStop(0,'#b9c3cf');g.addColorStop(1,'#8f9aa8');ctx.fillStyle=g;rr(side?445:47,y-23,48,46,8);ctx.fill();}
+      // door
+      ctx.fillStyle='#262c37';ctx.fillRect(side?440:60,344,40,72);
+      ctx.fillStyle='#4b5566';ctx.fillRect(side?452:66,352,22,56);
+      ctx.fillStyle=C.amber;ctx.fillRect(side?436:100,344,4,72);
+    }
+    // end walls with a Kwun Tong line map
+    ctx.fillStyle='#0e1118';ctx.fillRect(0,56,W,44);ctx.fillRect(0,700,W,20);
+    ctx.fillStyle='#00ab4e';ctx.fillRect(40,86,460,4);
+    for(let i=0;i<12;i++){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(52+i*39,88,4,0,7);ctx.fill();}
+    txt('觀塘綫 KWUN TONG LINE',270,72,11,'#7fdca8','center',MONO,400);
+    for(const o of [{x:270,y:230},{x:270,y:540}]){const g=ctx.createRadialGradient(o.x-2,o.y-2,1,o.x,o.y,9);g.addColorStop(0,'#fff');g.addColorStop(1,'#707a88');ctx.fillStyle=g;ctx.beginPath();ctx.arc(o.x,o.y,8,0,7);ctx.fill();}
+  },
+  shadow(x,y,r){ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(x,y+10,r,r*.55,0,0,7);ctx.fill();},
+  draw(){
+    ctx.drawImage(this.bg,0,0,W,H);
+    const t=performance.now()/1000,p=this.p;
+    for(const s of this.seats){
+      if(s.state==='empty'){
+        const a=.5+.5*Math.sin(t*8);
+        ctx.save();ctx.shadowColor=C.jade;ctx.shadowBlur=18;ctx.strokeStyle=C.jade;ctx.lineWidth=3;rr(s.x-24,s.y-25,48,50,8);ctx.stroke();ctx.restore();
+        ctx.globalAlpha=.25+.25*a;ctx.fillStyle=C.jade;rr(s.x-24,s.y-25,48,50,8);ctx.fill();ctx.globalAlpha=1;
+        txt('空位',s.x,s.y,15,'#eafff7','center',BODY,900);
+      }else if(!(p.sit>0&&p.seat===s))emo(s.who,s.x,s.y,32);
+    }
+    ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(255,51,85,.5)';ctx.lineWidth=2;
+    for(const a of this.aunties)if(a.target){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.target.fx,a.target.y);ctx.stroke();}
+    ctx.setLineDash([]);
+    for(const c of this.crowd){this.shadow(c.x,c.y,15);emo(c.e,c.x,c.y,32);}
+    for(const a of this.aunties){this.shadow(a.x,a.y,17);emo('🛒',a.x+(a.target&&a.target.side?16:-16),a.y+8,22);emo('👵',a.x,a.y,34);}
+    if(p.sit>0)emo('😌',p.seat.x,p.seat.y,32);
+    else{ctx.fillStyle='rgba(255,182,39,.28)';ctx.beginPath();ctx.arc(p.x,p.y,22,0,7);ctx.fill();emo('🧑',p.x,p.y,32);txt('YOU',p.x,p.y-27,11,C.amber,'center',DISP,400);}
+    if(this.ann){ctx.fillStyle='#050505';rr(110,62,320,44,6);ctx.fill();ctx.strokeStyle='#3a0d0d';ctx.stroke();txt(`下一站 ${this.ann.zh}`,270,77,16,'#ff5a3c','center',BODY,900);txt(`Next station: ${this.ann.en}`,270,96,12,'#ffb36b','center',MONO,400);}
+    if(this.swayT>0)txt('!! 車廂搖晃 BRAKING !!',270,382,18,C.amber,'center',DISP,400);
+    hud(this,`🪑 ${this.pts} · 👵 ${this.lost}`);
+  },
+  summary(){const score=Math.min(100,this.pts*9);return{score,stats:`Seats grabbed: ${this.pts} · Lost to aunties: ${this.lost}`,verdict:verdict(score,['You stood from Kwun Tong to Central. Your calves are now legally weapons.','A few seats. The aunties have memorised your face.','Strong seat game. Commuters are whispering about you.','Auntie-level reflexes. The trolleys fear YOU now.'])};}
+};
+
+// =====================================================================
+// 2. CHA CHAAN TENG
+// =====================================================================
+const ORDERS=[
+  {c:'靚仔',j:'leng zai',a:'A bowl of plain white rice',ae:'🍚',t:'A handsome young man',te:'🕺',n:'"Handsome boy" = plain rice. Nobody knows why. Just go with it.'},
+  {c:'齋啡',j:'zaai fe',a:'Black coffee',ae:'☕',t:'Coffee blessed by monks',te:'🧘',n:'齋 means "plain". Nothing added. Monks not involved.'},
+  {c:'飛沙走奶',j:'fei saa zau naai',a:'Hold the sugar AND the milk',ae:'🫖',t:'Flying sand, runaway milk',te:'🏜️',n:'飛 skip · 沙 sugar · 走 remove · 奶 milk. So... tea.'},
+  {c:'鴛鴦',j:'jyun joeng',a:'Coffee + milk tea, mixed',ae:'☕🫖',t:'A pair of mandarin ducks',te:'🦆🦆',n:'Named after the lovebird ducks. Double caffeine, zero regrets.'},
+  {c:'菠蘿包',j:'bo lo baau',a:'Sweet bun, zero pineapple',ae:'🍞',t:'Bun stuffed with pineapple',te:'🍍',n:'The crackly top just LOOKS like a pineapple.'},
+  {c:'0T',j:'ling ti',a:'Lemon tea',ae:'🍋',t:'Overtime. Again.',te:'🕙',n:'0 looks like a lemon slice. T is tea. Peak efficiency.'},
+  {c:'走青',j:'zau ceng',a:'No spring onions',ae:'🚫🌿',t:'Run, Mr. Green, run!',te:'🏃',n:'青 = the green stuff. 走 = get it out of here.'},
+  {c:'檸樂',j:'ning lok',a:'Coke with lemon',ae:'🥤🍋',t:'Lemony happiness',te:'😊',n:'可樂 = Coke. The hot version with ginger "cures" colds.'},
+  {c:'茶走',j:'caa zau',a:'Milk tea with condensed milk',ae:'🥛',t:'The tea has left the building',te:'🚪',n:'Condensed milk swaps in for the sugar and evaporated milk.'},
+  {c:'公仔麵',j:'gung zai min',a:'Instant noodles',ae:'🍜',t:'Noodles shaped like little dolls',te:'🪆',n:'A brand name that ate the whole category.'},
+  {c:'加底',j:'gaa dai',a:'Extra rice or noodles',ae:'🍚🍚',t:'Add a basement',te:'🏗️',n:'底 = the base layer. More carbs underneath.'},
+  {c:'例湯',j:'lai tong',a:'Soup of the day',ae:'🥣',t:'Soup required by law',te:'⚖️',n:'Probably borscht. Possibly not. Never ask.'},
+  {c:'西多士',j:'sai do si',a:'Deep-fried French toast',ae:'🧈',t:'Toast from the Wild West',te:'🤠',n:'Peanut butter inside, butter on top, syrup everywhere.'},
+  {c:'凍檸茶少甜',j:'dung ning caa siu tim',a:'Iced lemon tea, less sweet',ae:'🧊🍋',t:'A sad frozen lemon',te:'😢',n:'少甜 = less sweet. Still extremely sweet.'},
+  {c:'餐蛋麵',j:'caan daan min',a:'Spam, egg & instant noodles',ae:'🍳',t:'A meal-egg-noodle riddle',te:'🧩',n:'餐肉 = luncheon meat. Breakfast of champions.'},
+  {c:'奶茶',j:'naai caa',a:'Hong Kong milk tea',ae:'🥛🫖',t:"Grandma's tea",te:'👵',n:'Pulled through a "silk stocking" filter. Strong enough to strip paint.'}
+];
+const cafe={
+  clock:'08:25',title:'Cha Chaan Teng',zh:'茶餐廳落單',dur:90,
+  blurb:'Breakfast rush at the cha chaan teng. The waiter yells orders in code and has zero patience for tourists.',
+  how:'Tap the card that means what the waiter just yelled, or press <b>1–4</b>. Wrong answer: you get yelled at. Too slow: you get yelled at louder. Wrong answers teach you the code.',
+  init(){
+    this.pts=0;this.streak=0;this.best=0;this.miss=0;this.bag=[];this.last=null;
+    this.rects=[{x:20,y:344,w:240,h:170},{x:280,y:344,w:240,h:170},{x:20,y:528,w:240,h:170},{x:280,y:528,w:240,h:170}];
+    this.bg=makeLayer(()=>this.paintBg());this.newQ();
+  },
+  newQ(){
+    if(!this.bag.length){this.bag=shuffle([...ORDERS]);if(this.bag[this.bag.length-1]===this.last)this.bag.unshift(this.bag.pop());}
+    const it=this.bag.pop();this.last=it;this.it=it;
+    const others=shuffle(ORDERS.filter(o=>o!==it)).slice(0,2).map(o=>({t:o.a,e:o.ae}));
+    this.opts=shuffle([{t:it.a,e:it.ae,ok:true},{t:it.t,e:it.te},...others]);
+    const k=this.elapsed/this.dur;this.pmax=7-k*3.6;this.pat=this.pmax;this.chosen=-1;this.fb=0;
+    this.line=pick(["食咩呀? (What'll it be?)",'快啲! (Hurry up!)','下一位! (Next!)','要咩? (Order?)']);
+  },
+  choose(i){
+    if(this.fb>0||!this.opts[i])return;this.chosen=i;
+    if(this.opts[i].ok){this.pts++;this.streak++;this.best=Math.max(this.best,this.streak);sfx.good();this.fb=.85;this.line=pick(['好! (Fine.)','OK!','算你啦. (I guess.)','識食! (You know food!)']);const r=this.rects[i];pop(this.streak>=3?`+1  🔥×${this.streak}`:'+1',r.x+r.w/2,r.y+24,C.amber,24);}
+    else{this.streak=0;this.miss++;sfx.bad();shake=.25;this.fb=1.9;this.line=pick(['睇清楚啲啦! (Read it properly!)','吓?! (Huh?!)','你係咪遊客呀? (Tourist, huh?)','唉... (Sigh...)']);}
+  },
+  update(dt){
+    if(this.fb>0){this.fb-=dt;if(this.fb<=0)this.newQ();return;}
+    this.pat-=dt;
+    if(this.pat<=0){this.chosen=-2;this.streak=0;this.miss++;sfx.bad();this.fb=1.9;this.line='太慢! 下一位! (Too slow! NEXT!)';}
+  },
+  down(x,y){this.rects.forEach((r,i)=>{if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h)this.choose(i);});},
+  key(k){if(k.length===1&&'1234'.includes(k))this.choose(+k-1);},
+  paintBg(){
+    ctx.fillStyle='#0b3f35';ctx.fillRect(0,0,W,H);
+    const sh=['#0f5c4a','#127058','#0d4f40','#15785f','#106350'];
+    for(let y=56;y<H;y+=14)for(let x=0;x<W;x+=14){ctx.fillStyle=pick(sh);ctx.fillRect(x+1,y+1,12,12);}
+    const g=ctx.createRadialGradient(W/2,H/2,100,W/2,H/2,520);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.55)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  },
+  draw(){
+    ctx.drawImage(this.bg,0,0,W,H);
+    const t=performance.now()/1000;
+    const angry=this.fb>0&&(this.chosen===-2||(this.chosen>=0&&!this.opts[this.chosen].ok));
+    const jx=angry?Math.sin(t*50)*3:0;
+    emo(angry?'😤':'👨‍🦳',86+jx,196,92);emo('📝',128,258,30);
+    ctx.fillStyle='#fffaf0';rr(166,70,358,238,18);ctx.fill();
+    ctx.beginPath();ctx.moveTo(168,180);ctx.lineTo(134,200);ctx.lineTo(172,208);ctx.closePath();ctx.fill();
+    const fs=this.it.c.length>3?50:66;
+    txt(this.it.c,345,132,fs,'#c8102e','center',BODY,900);
+    txt(this.it.j,345,184,17,'#6b5d4f','center',MONO,400);
+    if(this.fb>0)para(this.it.n,345,218,318,14,'#2a2320',19,600);
+    txt(this.line,345,286,15,'#8a1c2b','center',BODY,700);
+    txt('耐性 PATIENCE',20,322,11,'#cfe9df','left',MONO,400);
+    const f=clamp(this.pat/this.pmax,0,1);
+    ctx.fillStyle='rgba(0,0,0,.4)';rr(124,316,396,12,6);ctx.fill();
+    ctx.fillStyle=f>.4?C.amber:C.red;rr(124,316,396*f,12,6);ctx.fill();
+    this.opts.forEach((o,i)=>{
+      const r=this.rects[i];let bg='#f6ecd2',bd='#3b2a1a';
+      if(this.fb>0){if(o.ok){bg='#c9f2de';bd=C.jade;}else if(i===this.chosen){bg='#ffd0d6';bd=C.red;}else ctx.globalAlpha=.55;}
+      ctx.fillStyle=bg;rr(r.x,r.y,r.w,r.h,14);ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=bd;ctx.stroke();
+      ctx.fillStyle='#3b2a1a';rr(r.x+10,r.y+10,26,26,6);ctx.fill();
+      txt(String(i+1),r.x+23,r.y+24,15,'#f6ecd2','center',MONO,400);
+      emo(o.e,r.x+r.w/2,r.y+60,44);
+      para(o.t,r.x+r.w/2,r.y+114,r.w-28,18,'#2a1d12',23,700);
+      ctx.globalAlpha=1;
+    });
+    hud(this,`✓ ${this.pts}${this.streak>=2?'  🔥'+this.streak:''}`);
+  },
+  summary(){const score=Math.min(100,this.pts*6+this.best);return{score,stats:`Orders understood: ${this.pts} · Best streak: ${this.best} · Got yelled at: ${this.miss}`,verdict:verdict(score,["The waiter wrote 'tourist' on your table. In marker.","You ordered a 'handsome boy' at least once. It's fine.",'The waiter almost smiled. Almost.','Fluent in cha chaan teng. Your milk tea arrives before you sit down.'])};}
+};
+
+// =====================================================================
+// 3. YUM CHA RUSH
+// =====================================================================
+const DISHES=[{zh:'蝦餃',en:'Har gow',e:'🥟'},{zh:'燒賣',en:'Siu mai',e:'🍤'},{zh:'叉燒包',en:'Char siu bao',e:'🍙'},{zh:'鳳爪',en:'Chicken feet',e:'🐾'},{zh:'蛋撻',en:'Egg tart',e:'🥧'},{zh:'腸粉',en:'Cheung fun',e:'🌯'},{zh:'糯米雞',en:'Lo mai gai',e:'🍃'},{zh:'牛肉球',en:'Beef ball',e:'🧆'}];
+const dimsum={
+  clock:'12:30',title:'Yum Cha Rush',zh:'飲茶搶點心',dur:90,
+  blurb:"Sunday yum cha with the whole family. The carts don't stop. The aunties pushing them definitely don't stop. Grandpa wants his har gow.",
+  how:'Tap the dishes on your <b>order sheet</b> as the carts roll past. Grab the wrong one and it gets stamped on your bill anyway. When the 🫖 teapot runs dry, tap it — flip the lid, like a local.',
+  init(){
+    this.pts=0;this.done=0;this.wrong=0;this.grabbed=0;
+    this.lanes=[{y:296,dir:1,sp:78,next:0},{y:418,dir:-1,sp:100,next:0},{y:540,dir:1,sp:66,next:0}];
+    this.items=[];this.fly=[];this.tea={empty:false,t:0,next:rand(12,16)};
+    this.newOrder();
+    for(const l of this.lanes)for(let x=40;x<W;x+=rand(100,135))this.items.push(this.mkItem(l,x));
+    this.bg=makeLayer(()=>this.paintBg());
+  },
+  newOrder(){const n=Math.min(4,2+this.done);this.order=shuffle([...DISHES]).slice(0,n).map(d=>({d,need:ri(1,this.done>=2?3:2),got:0}));},
+  mkItem(l,x){if(Math.random()<.07)return{l,x,aunty:true,r:30,shout:pick(['蝦餃燒賣!','叉燒包!','鳳爪!','點心呀!'])};const want=this.order.filter(o=>o.got<o.need).map(o=>o.d);const d=want.length&&Math.random()<.5?pick(want):pick(DISHES);return{l,x,d,r:34};},
+  update(dt){
+    const k=this.elapsed/this.dur,mult=1+k*.75;
+    for(const l of this.lanes){l.next-=dt;if(l.next<=0){this.items.push(this.mkItem(l,l.dir>0?-45:W+45));l.next=rand(100,140)/(l.sp*mult);}}
+    for(const it of this.items){it.x+=it.l.dir*it.l.sp*mult*dt;if(it.x<-70||it.x>W+70)it.dead=true;}
+    this.items=this.items.filter(i=>!i.dead);
+    for(const f of this.fly)f.t+=dt*2.2;this.fly=this.fly.filter(f=>f.t<1);
+    const tea=this.tea;
+    if(!tea.empty){tea.next-=dt;if(tea.next<=0){tea.empty=true;tea.t=5;pop('🫖 Teapot empty! Tap it!',420,600,C.cyan,16);sfx.blip();}}
+    else{tea.t-=dt;if(tea.t<=0){tea.empty=false;tea.next=rand(12,17);this.pts-=5;pop('Grandpa refilled it himself. Shame. -5',300,600,C.red,15,1.6);sfx.bad();}}
+  },
+  down(x,y){
+    if(this.tea.empty&&x>430&&y>628){this.tea.empty=false;this.tea.next=rand(12,17);this.pts+=4;sfx.good();pop('Lid flipped. Refill incoming! +4',360,600,C.jade,16);return;}
+    let best=null,bd=44;
+    for(const it of this.items){const d=Math.hypot(it.x-x,it.l.y-y);if(d<bd){bd=d;best=it;}}
+    if(!best)return;
+    if(best.aunty){pop('Auntie: 唔好掂架車! (Hands off the cart!)',best.x,best.l.y-44,C.amber,15);sfx.blip();return;}
+    this.grab(best);
+  },
+  grab(it){
+    it.dead=true;this.fly.push({e:it.d.e,x:it.x,y:it.l.y,t:0});
+    const o=this.order.find(o=>o.d===it.d&&o.got<o.need);
+    if(o){o.got++;this.pts+=3;this.grabbed++;sfx.good();pop('+3',it.x,it.l.y-44,C.amber,22);
+      if(this.order.every(o=>o.got>=o.need)){this.pts+=10;this.done++;pop('埋單! Order done +10',270,236,C.jade,24);sfx.chime();this.newOrder();}}
+    else{this.pts-=3;this.wrong++;sfx.bad();shake=.2;pop(pick(['Stamped on your bill anyway. -3','Nobody ordered that! -3','Grandpa: "我冇叫呢個!" -3',`Oh no, ${it.d.en}. -3`]),it.x,it.l.y-46,C.red,16);}
+  },
+  paintBg(){
+    ctx.fillStyle='#6e1020';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,196,80,.07)';
+    for(let y=60;y<H;y+=46)for(let x=(y/46%2)*23;x<W;x+=46){ctx.beginPath();ctx.arc(x,y,9,0,7);ctx.fill();}
+    ctx.font=`900 260px ${BODY}`;ctx.fillStyle='rgba(255,196,80,.06)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('囍',W/2,430);
+    for(const y of [296,418,540]){ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(0,y-46,W,104);ctx.fillStyle='rgba(255,196,80,.18)';ctx.fillRect(0,y-46,W,2);ctx.fillRect(0,y+56,W,2);}
+    ctx.fillStyle='#4a2410';ctx.beginPath();ctx.ellipse(W/2,700,300,70,0,0,7);ctx.fill();
+    ctx.fillStyle='#6b3a1e';ctx.beginPath();ctx.ellipse(W/2,696,290,62,0,0,7);ctx.fill();
+  },
+  draw(){
+    ctx.drawImage(this.bg,0,0,W,H);
+    const t=performance.now()/1000;
+    // order sheet (點心紙)
+    ctx.fillStyle='#fbf5e6';rr(16,64,508,164,8);ctx.fill();
+    ctx.fillStyle='#b3122e';ctx.fillRect(16,64,508,26);
+    txt('點心紙  ORDER SHEET · TABLE 23',270,78,13,'#fff','center',MONO,400);
+    const n=this.order.length,cw=508/n;
+    this.order.forEach((o,i)=>{
+      const cx=16+cw*i+cw/2;
+      if(i>0){ctx.fillStyle='#e0d3b5';ctx.fillRect(16+cw*i,96,1,124);}
+      emo(o.d.e,cx,122,30);
+      txt(o.d.zh,cx,156,18,'#2a1d12','center',BODY,900);
+      txt(o.d.en,cx,176,11,'#7a6a55','center',BODY,500);
+      for(let j=0;j<o.need;j++){const sx=cx+(j-(o.need-1)/2)*20;ctx.beginPath();ctx.arc(sx,204,7,0,7);if(j<o.got){ctx.fillStyle='#c8102e';ctx.fill();}else{ctx.strokeStyle='#b8a57f';ctx.lineWidth=1.5;ctx.stroke();}}
+    });
+    // carts
+    for(const it of this.items){
+      const y=it.l.y;
+      if(it.aunty){emo('🛒',it.x+(it.l.dir>0?-26:26),y+6,34);emo('👵',it.x,y-4,40);txt(it.shout,it.x,y-40,12,C.amber,'center',BODY,900);continue;}
+      ctx.fillStyle='#8c6a3b';ctx.beginPath();ctx.arc(it.x,y,34,0,7);ctx.fill();
+      ctx.fillStyle='#d9b27c';ctx.beginPath();ctx.arc(it.x,y,29,0,7);ctx.fill();
+      ctx.strokeStyle='rgba(120,85,40,.35)';ctx.lineWidth=1;for(let s=-20;s<=20;s+=8){ctx.beginPath();ctx.moveTo(it.x+s,y-26);ctx.lineTo(it.x+s,y+26);ctx.stroke();}
+      emo(it.d.e,it.x,y-6,28);
+      txt(it.d.zh,it.x,y+18,13,'#3b2410','center',BODY,900);
+      txt(it.d.en,it.x,y+46,11,C.cream,'center',BODY,500);
+    }
+    for(const f of this.fly){const e=f.t*f.t;emo(f.e,f.x+(170-f.x)*e,f.y+(668-f.y)*e-Math.sin(f.t*Math.PI)*60,28*(1-f.t*.4));}
+    // family + teapot
+    emo('👴',96,660,40);emo('👵',150,668,38);emo('👦',204,664,34);
+    const tea=this.tea;
+    if(tea.empty){const a=.5+.5*Math.sin(t*10);ctx.fillStyle=`rgba(67,217,255,${.2+.25*a})`;ctx.beginPath();ctx.arc(478,668,34,0,7);ctx.fill();ctx.strokeStyle=C.cyan;ctx.lineWidth=3;ctx.beginPath();ctx.arc(478,668,34,-Math.PI/2,-Math.PI/2+Math.PI*2*(tea.t/5));ctx.stroke();txt('TAP!',478,626,12,C.cyan,'center',DISP,400);}
+    emo('🫖',478,668,44);
+    hud(this,`🥟 ${this.pts}`);
+  },
+  summary(){const score=clamp(Math.round(this.pts*.85),0,100);return{score,stats:`Dishes grabbed: ${this.grabbed} · Orders done: ${this.done} · Wrong dishes: ${this.wrong}`,verdict:verdict(score,['Grandpa is eating chicken feet out of spite. Your fault.','Some har gow made it. Grandma is "not angry, just disappointed".','Good haul. Grandpa let you pour the tea.','Cart-whisperer. The aunties now bring dishes TO you.'])};}
+};
+
+// =====================================================================
+// 4. MONG KOK DRIP
+// =====================================================================
+const FLYERS=['Luxury flat in Zhuhai! Only 2hr commute!','Foot massage 50% off!!','Loan approved in 5 minutes!','Learn English, become CEO!','Fortune teller: you will get wet.'];
+const drip={
+  clock:'18:10',title:'Mong Kok Drip',zh:'旺角冷氣水',dur:90,
+  blurb:'Walking down Sai Yeung Choi Street after work. Every air-con unit above you is leaking. There are also snacks. So many snacks.',
+  how:'Move left / right with arrow keys or A / D, or press and drag. Catch street snacks. Dodge 💧 air-con drips (they wobble first), 📄 flyer guys and tour groups.',
+  init(){
+    this.pts=0;this.snacks=0;this.wets=0;this.p={x:270,wet:0,stun:0,vx:0};
+    this.units=[46,112,176,238,300,364,428,494].map((x,i)=>({x,y:150+((i*37)%3)*42,cd:rand(1.2,4.5)}));
+    this.objs=[];this.fx=[];this.nextSnack=.6;this.nextFly=7;this.nextTour=9;this.tour=null;
+    this.bg=makeLayer(()=>this.paintBg());
+  },
+  update(dt){
+    const k=this.elapsed/this.dur,p=this.p,PY=636;
+    for(const u of this.units){u.cd-=dt*(1+k*1.7);if(u.cd<=0){this.objs.push({ty:'drip',x:u.x+rand(-6,6),y:u.y+20,vy:40});u.cd=rand(2.6,5.8);}}
+    if((this.nextSnack-=dt)<=0){const r=Math.random();const s=r<.12?{e:'🧋',v:3}:r<.45?{e:'🧇',v:1}:r<.75?{e:'🍢',v:1}:{e:'🥭',v:1};this.objs.push({ty:'snack',e:s.e,v:s.v,x:rand(40,500),y:-20,vy:rand(170,240)+k*90});this.nextSnack=rand(.5,.95);}
+    if((this.nextFly-=dt)<=0){this.objs.push({ty:'fly',x0:rand(70,470),x:0,y:-20,vy:120+k*50,ph:rand(0,6)});this.nextFly=rand(3.5,6.5)-k*1.8;}
+    if(!this.tour&&(this.nextTour-=dt)<=0){const dir=Math.random()<.5?1:-1;this.tour={x:dir>0?-110:W+110,dir,w:170,hit:false};this.nextTour=rand(11,15);}
+    if(this.tour){this.tour.x+=this.tour.dir*(95+k*30)*dt;if(this.tour.x<-150||this.tour.x>W+150)this.tour=null;}
+    let ix=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0);
+    if(pointer.down){const dx=pointer.x-p.x;ix=Math.abs(dx)>6?Math.sign(dx)*Math.min(1,Math.abs(dx)/40):0;}
+    const sp=p.stun>0?0:p.wet>0?170:360;
+    p.vx+=(ix*sp-p.vx)*Math.min(1,dt*14);p.x=clamp(p.x+p.vx*dt,26,514);p.wet-=dt;p.stun-=dt;
+    if(this.tour){const T=this.tour,L=T.x-T.w/2,R=T.x+T.w/2;if(p.x>L-14&&p.x<R+14){const nx=p.x<T.x?L-16:R+16;if(nx>=26&&nx<=514)p.x=nx;if(!T.hit){T.hit=true;pop('Tour group! 跟住面旗!',T.x,560,C.amber,16);sfx.bad();}}}
+    for(const o of this.objs){
+      if(o.ty==='drip'){o.vy+=900*dt;o.y+=o.vy*dt;}else{o.y+=o.vy*dt;if(o.ty==='fly')o.x=o.x0+Math.sin(o.y/38+o.ph)*46;}
+      if(o.y>PY-34&&o.y<PY+26){const dx=Math.abs(o.x-p.x);
+        if(o.ty==='drip'&&dx<22){o.dead=true;this.pts-=3;this.wets++;p.wet=1.2;sfx.splash();pop('濕晒! -3',p.x,PY-56,C.cyan,20);}
+        else if(o.ty==='snack'&&dx<32){o.dead=true;this.pts+=o.v;this.snacks++;o.v>1?sfx.good():sfx.blip();pop('+'+o.v,o.x,PY-56,C.amber,20);}
+        else if(o.ty==='fly'&&dx<28){o.dead=true;p.stun=.9;sfx.bad();pop(pick(FLYERS),p.x,PY-86,C.cream,14,1.5);}}
+      if(o.y>700){o.dead=true;if(o.ty==='drip')this.fx.push({x:o.x,t:0});}
+    }
+    this.objs=this.objs.filter(o=>!o.dead);
+    for(const f of this.fx)f.t+=dt;this.fx=this.fx.filter(f=>f.t<.4);
+  },
+  paintBg(){
+    const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0717');g.addColorStop(1,'#2a0f2e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    const cols=['#2b1c33','#1f2638','#33202a','#1d2b2c'];
+    for(let i=0;i<4;i++){const x=i*135;ctx.fillStyle=cols[i];ctx.fillRect(x+2,40,131,640);
+      for(let r=0;r<16;r++)for(let c=0;c<4;c++){const lit=Math.random()<.45;ctx.fillStyle=lit?pick(['#ffd88a','#ffe9b8','#9fe3ff','#ffb3c7']):'#140d1a';ctx.globalAlpha=lit?.5:1;ctx.fillRect(x+12+c*31,60+r*38,18,22);}ctx.globalAlpha=1;}
+    for(const[s,x,y,c] of [['按摩',60,290,C.pink],['當舖',200,262,C.red],['茶餐廳',330,280,C.amber],['找換',470,320,C.jade],['藥房',132,420,C.cyan],['麻雀',410,440,C.pink]])neonV(s,x,y,c);
+    ctx.fillStyle='#1a1420';ctx.fillRect(0,664,W,56);ctx.fillStyle='#2a2231';ctx.fillRect(0,664,W,6);
+  },
+  draw(){
+    ctx.drawImage(this.bg,0,0,W,H);
+    const t=performance.now()/1000,p=this.p;
+    for(const u of this.units){
+      const warn=u.cd<.7,jx=warn?Math.sin(t*60)*1.5:0;
+      ctx.fillStyle='#cfd3d6';rr(u.x-26+jx,u.y-18,52,36,4);ctx.fill();ctx.strokeStyle='#8b9196';ctx.lineWidth=2;ctx.stroke();
+      ctx.strokeStyle='#9aa0a6';ctx.lineWidth=1;for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(u.x-20+jx,u.y-10+i*5);ctx.lineTo(u.x+6+jx,u.y-10+i*5);ctx.stroke();}
+      ctx.fillStyle='#6f757a';ctx.beginPath();ctx.arc(u.x+15+jx,u.y,8,0,7);ctx.fill();
+      if(warn){const g=(.7-u.cd)/.7;ctx.fillStyle=C.cyan;ctx.beginPath();ctx.arc(u.x,u.y+21+g*4,2+g*5,0,7);ctx.fill();}
+    }
+    for(const f of this.fx){ctx.strokeStyle=`rgba(67,217,255,${1-f.t/.4})`;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(f.x,690,6+f.t*50,3+f.t*8,0,0,7);ctx.stroke();}
+    for(const o of this.objs){if(o.ty==='drip')emo('💧',o.x,o.y,26);else if(o.ty==='snack')emo(o.e,o.x,o.y,34);else{ctx.save();ctx.translate(o.x,o.y);ctx.rotate(Math.sin(o.y/30)*.5);emo('📄',0,0,28);ctx.restore();}}
+    if(this.tour){const T=this.tour;['🧑‍🦳','👩‍🦰','🧔','👨‍🦱','👵'].forEach((e,i)=>emo(e,T.x-T.w/2+18+i*33,640+(i%2)*6,32));const fx=T.dir>0?T.x+T.w/2-4:T.x-T.w/2+4;ctx.fillStyle='#777';ctx.fillRect(fx-1,560,2,70);emo('🚩',fx+8,566,26);}
+    ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(p.x,670,20,6,0,0,7);ctx.fill();
+    emo(p.stun>0?'😵‍💫':'🚶',p.x,636,46);
+    if(p.wet>0)emo('💦',p.x+20,608,22);
+    txt('YOU',p.x,596,11,C.amber,'center',DISP,400);
+    hud(this,`🧇 ${this.pts}`);
+  },
+  summary(){const score=clamp(Math.round(this.pts*1.4),0,100);return{score,stats:`Snacks caught: ${this.snacks} · Times dripped on: ${this.wets}`,verdict:verdict(score,['You are 60% air-con water now. Mong Kok claims another.','Damp but fed. A classic Mong Kok evening.','Mostly dry, mostly full. Impressive.','Untouchable. The air-con units are filing complaints about you.'])};}
+};
+
+// =====================================================================
+// 5. MINIBUS 有落!
+// =====================================================================
+const STOPS=[{zh:'街口有落!',en:'At the corner, please!',label:'Street corner'},{zh:'前面7仔有落!',en:'At the 7-Eleven ahead!',label:'7-Eleven'},{zh:'巴士站有落!',en:'At the bus stop!',label:'Bus stop'},{zh:'轉彎有落!',en:'Just after the bend!',label:'The bend'},{zh:'燈位有落!',en:'At the traffic lights!',label:'Traffic lights'},{zh:'油站有落!',en:'At the petrol station!',label:'Petrol station'},{zh:'街市有落!',en:'At the wet market!',label:'Wet market'},{zh:'麻雀館有落!',en:'At the mahjong parlour!',label:'Mahjong parlour'},{zh:'醫院有落!',en:'At the hospital (not for me)!',label:'Hospital'},{zh:'屋企樓下有落!',en:'Outside my building!',label:'Home'},{zh:'涼茶舖有落!',en:'At the herbal tea shop!',label:'Herbal tea'},{zh:'學校有落!',en:'At the school!',label:'School'}];
+const DECOYS=['7-Eleven','Circle K','Pawn shop 押','Cha chaan teng','Another 7-Eleven','Bakery','Mahjong 麻雀','Herbal tea','Bus stop','Estate agent','Yet another 7-Eleven','Wet market'];
+const RADIOS=[{n:'🏇 Horse racing radio, full blast',thr:80},{n:'🎶 Cantopop ballad, sobbing along',thr:58},{n:'📞 Arguing with his wife on speaker',thr:70},{n:'🤫 Dead silence (suspicious)',thr:38},{n:'📻 Phone-in radio rant',thr:74},{n:'😴 Possibly asleep??',thr:66}];
+const PXM=3.2,FX=210;
+const minibus={
+  clock:'21:40',title:'Minibus 有落!',zh:'紅van落車',dur:999,
+  blurb:'Red minibus home. Sixteen seats, no bell, and a driver doing 100 km/h. To get off, you shout your stop. Loudly. At exactly the right moment.',
+  how:'<b>Hold</b> Space, or press anywhere, to wind up your shout. The meter swings, so <b>release</b> above the driver\'s line. The dashed line shows where the van stops if he hears you now. Land the door on your 📍 stop.',
+  init(){
+    this.pts=0;this.round=0;this.maxR=10;this.stops=shuffle([...STOPS]).slice(0,this.maxR);this.pos=0;this.v=22;this.tv=22;this.log=[];this.marks=[];
+    this.holding=false;this.holdT=0;this.vol=0;this.lineT=0;this.shoutT=0;this.finished=false;this.S=undefined;this.driverLine='';
+    this.bld=[];for(let i=0;i<40;i++)this.bld.push({x:i*56+rand(0,8),w:rand(42,60),h:rand(110,280),c:pick(['#1d1830','#241b3a','#1a2233','#2a1a2e']),win:Array.from({length:40},()=>Math.random()<.35)});
+    this.signs=[];for(let i=0;i<14;i++)this.signs.push({x:i*160+rand(0,60),t:pick(['酒樓','按摩','夜總會','茶餐廳','藥房','當舖','金行','卡拉OK']),c:pick([C.pink,C.red,C.amber,C.jade,C.cyan]),y:rand(250,300)});
+    this.startRound();
+  },
+  startRound(){
+    const st=this.stops[this.round];this.st=st;
+    if(this.S!==undefined&&this.round>0)this.marks.push({p:this.S,label:this.stops[this.round-1].label});
+    this.S=this.pos+rand(175,235);this.state='drive';this.heard=false;this.brakeIn=-1;this.missed=false;this.radio=pick(RADIOS);this.tv=rand(18,30);this.res=null;
+    this.marks=this.marks.filter(m=>m.p>this.pos-90);
+    const pool=DECOYS.filter(x=>x!==st.label);
+    let d=this.pos+rand(40,70);
+    while(d<this.S-28){if(!this.marks.some(m=>Math.abs(m.p-d)<25))this.marks.push({p:d,label:pick(pool)});d+=rand(38,62);}
+    this.marks.push({p:this.S+rand(45,70),label:pick(pool)});
+  },
+  press(){if(this.state!=='drive'||this.heard)return;this.holding=true;this.holdT=0;},
+  release(){
+    if(!this.holding)return;this.holding=false;
+    const vol=Math.round(this.vol*100);this.shoutT=1;this.shoutVol=vol;sfx.shout(vol);
+    if(vol>=this.radio.thr){this.heard=true;this.brakeIn=.3;this.driverLine=vol>=96?'OK OK! 聽到喇! (I HEARD YOU!)':pick(['收到! (Got it.)','好. (Fine.)','嗯. (Grunt.)']);}
+    else this.driverLine=pick(['咩話? (Huh?)','...? (keeps driving)','大聲啲! (LOUDER!)']);
+    this.lineT=1.5;this.vol=0;
+  },
+  key(k,down){},
+  update(dt){
+    if(this.holding){this.holdT+=dt;const ph=(this.holdT/.85)%2;this.vol=ph<1?ph:2-ph;}
+    this.lineT-=dt;this.shoutT-=dt;
+    if(this.state==='drive'){
+      if(Math.random()<dt*.35)this.tv=rand(17,31);
+      this.v+=(this.tv-this.v)*Math.min(1,dt*.9);this.pos+=this.v*dt;
+      if(this.brakeIn>=0){this.brakeIn-=dt;if(this.brakeIn<0)this.state='brake';}
+      if(!this.heard&&this.pos>this.S+25){this.holding=false;this.finishRound(null);}
+    }else if(this.state==='brake'){
+      this.v=Math.max(0,this.v-7*dt);this.pos+=this.v*dt;if(this.v<=0)this.finishRound(this.pos-this.S);
+    }else if(this.state==='result'){
+      this.rt-=dt;
+      if(this.missed){this.v+=(this.tv-this.v)*Math.min(1,dt*.9);this.pos+=this.v*dt;}
+      if(this.rt<=0){this.round++;if(this.round>=this.maxR)this.finished=true;else this.startRound();}
+    }
+  },
+  finishRound(err){
+    this.state='result';this.rt=2.5;let r;
+    if(err===null){this.missed=true;r={big:'MISSED',p:0,sub:'Driver: "你冇講喎!" (You never said!) Next stop: Shenzhen.',c:C.red};sfx.bad();}
+    else{const m=Math.abs(err),mm=Math.round(m);
+      if(m<=5)r={big:'PERFECT 準!',p:10,sub:'Door opened right at your stop. The driver nodded. Once.',c:C.jade};
+      else if(m<=12)r={big:'NICE',p:7,sub:`${mm}m walk. Basically door-to-door.`,c:C.jade};
+      else if(m<=25)r={big:'MEH',p:4,sub:`${mm}m walk. Your knees have filed a complaint.`,c:C.amber};
+      else if(err>0)r={big:'OVERSHOT',p:1,sub:`Dropped ${mm}m past it. Welcome to the next district.`,c:C.red};
+      else r={big:'WAY TOO EARLY',p:1,sub:`Stopped ${mm}m short, on a flyover. Good luck.`,c:C.red};
+      r.p>=7?sfx.good():sfx.bad();}
+    this.pts+=r.p;this.res=r;this.log.push(r.p);
+  },
+  drawMark(p,label,tgt){
+    const x=FX+(p-this.pos)*PXM;if(x<-120||x>W+120)return;
+    ctx.fillStyle='#6b6f7a';ctx.fillRect(x-2,430,4,80);
+    ctx.font=`700 14px ${BODY}`;const w=ctx.measureText(label).width+22;
+    ctx.fillStyle=tgt?C.jade:'#2d2640';rr(x-w/2,402,w,30,7);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=tgt?'#eafff7':'#5a4f73';ctx.stroke();
+    txt(label,x,417,14,tgt?'#06251c':C.cream,'center',BODY,700);
+    if(tgt){emo('📍',x,376+Math.sin(performance.now()/180)*5,30);}
+  },
+  drawBus(t){
+    const bx=50,w=160,h=90,by=420+(this.v>1?Math.sin(t*18)*1.2:0);
+    ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(bx+w/2,524,w/2+6,8,0,0,7);ctx.fill();
+    const lg=ctx.createLinearGradient(bx+w,0,bx+w+170,0);lg.addColorStop(0,'rgba(255,243,176,.28)');lg.addColorStop(1,'rgba(255,243,176,0)');
+    ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(bx+w-4,by+h-34);ctx.lineTo(bx+w+170,by+h-60);ctx.lineTo(bx+w+170,by+h+10);ctx.lineTo(bx+w-4,by+h-24);ctx.closePath();ctx.fill();
+    ctx.save();rr(bx,by,w,h,16);ctx.clip();ctx.fillStyle='#f1e4c3';ctx.fillRect(bx,by,w,h);ctx.fillStyle='#d7263d';ctx.fillRect(bx,by,w,22);ctx.fillRect(bx,by+h-22,w,5);ctx.restore();
+    ctx.strokeStyle='#8f7d56';ctx.lineWidth=2;rr(bx,by,w,h,16);ctx.stroke();
+    const heads=['🧑','👩','😴'];
+    for(let i=0;i<3;i++){ctx.fillStyle='#223149';rr(bx+10+i*34,by+28,28,26,4);ctx.fill();emo(heads[i],bx+24+i*34,by+44,16);}
+    ctx.fillStyle='#2e3f5c';rr(bx+112,by+28,24,50,3);ctx.fill();
+    ctx.fillStyle='#39557d';ctx.beginPath();ctx.moveTo(bx+140,by+28);ctx.lineTo(bx+w-4,by+30);ctx.lineTo(bx+w-2,by+56);ctx.lineTo(bx+140,by+56);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#111';rr(bx+92,by+4,62,15,3);ctx.fill();txt('旺角 MK',bx+123,by+12,10,C.amber,'center',BODY,700);
+    ctx.fillStyle='#fff3b0';ctx.beginPath();ctx.arc(bx+w-5,by+h-30,5,0,7);ctx.fill();
+    for(const wx of [bx+34,bx+w-34]){ctx.fillStyle='#111';ctx.beginPath();ctx.arc(wx,by+h,15,0,7);ctx.fill();ctx.fillStyle='#9aa';ctx.beginPath();ctx.arc(wx,by+h,6,0,7);ctx.fill();const a=this.pos*1.4;ctx.strokeStyle='#555';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(wx+Math.cos(a)*12,by+h+Math.sin(a)*12);ctx.lineTo(wx-Math.cos(a)*12,by+h-Math.sin(a)*12);ctx.stroke();}
+  },
+  draw(){
+    const t=performance.now()/1000;
+    const g=ctx.createLinearGradient(0,56,0,520);g.addColorStop(0,'#1a0b2e');g.addColorStop(.6,'#5a1f4a');g.addColorStop(1,'#ff7a45');ctx.fillStyle=g;ctx.fillRect(0,0,W,520);
+    const tot=40*56,off=this.pos*PXM*.25;
+    for(const b of this.bld){const x=((b.x-off)%tot+tot)%tot-60;if(x>W)continue;const top=500-b.h;ctx.fillStyle=b.c;ctx.fillRect(x,top,b.w,b.h);ctx.fillStyle='rgba(255,210,140,.5)';let i=0;for(let yy=top+10;yy<490;yy+=16)for(let xx=x+6;xx<x+b.w-8;xx+=12){if(b.win[i++%40])ctx.fillRect(xx,yy,6,8);}}
+    const tot2=14*160,off2=this.pos*PXM*.6;
+    for(const s of this.signs){const x=((s.x-off2)%tot2+tot2)%tot2-40;if(x>W+40)continue;neonV(s.t,x,s.y,s.c);}
+    ctx.fillStyle='#2b2433';ctx.fillRect(0,500,W,14);ctx.fillStyle='#1b1a22';ctx.fillRect(0,514,W,90);
+    ctx.fillStyle='#d9b400';ctx.fillRect(0,512,W,3);
+    ctx.fillStyle='#e8d9a8';const o=(this.pos*PXM)%60;for(let x=-o;x<W;x+=60)ctx.fillRect(x,562,30,4);
+    for(const m of this.marks)this.drawMark(m.p,m.label,false);
+    this.drawMark(this.S,this.st.label,true);
+    if(this.state==='drive'&&!this.heard){const bd=this.v*.3+this.v*this.v/14,x2=FX+bd*PXM;ctx.strokeStyle='rgba(245,234,208,.6)';ctx.setLineDash([6,5]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(FX,590);ctx.lineTo(x2,590);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(x2,580);ctx.lineTo(x2,600);ctx.stroke();txt('stops here',x2,576,11,'rgba(245,234,208,.8)','center',MONO,400);}
+    this.drawBus(t);
+    if(this.shoutT>0){ctx.fillStyle='#fff';rr(20,340,250,46,12);ctx.fill();ctx.beginPath();ctx.moveTo(90,386);ctx.lineTo(80,404);ctx.lineTo(110,386);ctx.fill();txt(this.st.zh,145,363,22,'#c8102e','center',BODY,900);}
+    if(this.lineT>0&&this.driverLine){ctx.font=`700 14px ${BODY}`;const w=ctx.measureText(this.driverLine).width+24;ctx.fillStyle=this.heard?'#eafff7':'#ffe0e5';rr(W-w-16,300,w,34,10);ctx.fill();txt(this.driverLine,W-16-w/2,317,14,this.heard?'#06251c':'#8a1c2b','center',BODY,700);}
+    // top panel
+    ctx.fillStyle='rgba(12,8,20,.82)';ctx.fillRect(0,56,W,106);
+    txt('YOUR STOP 📍',20,76,11,C.dim,'left',MONO,400);
+    txt(this.st.zh,20,104,26,C.amber,'left',BODY,900);
+    txt(this.st.en,20,131,13,C.cream,'left',BODY,500);
+    txt('Driver: '+this.radio.n,20,151,12,C.dim,'left',BODY,500);
+    ctx.fillStyle='#050505';rr(W-126,68,110,62,8);ctx.fill();ctx.strokeStyle='#333';ctx.stroke();
+    const kmh=Math.round(this.v*3.6),over=kmh>80&&Math.floor(t*4)%2===0;
+    txt(String(kmh).padStart(3,'0'),W-71,96,36,over?'#ffffff':'#ff2a2a','center',MONO,400);
+    txt('km/h · 限速 80',W-71,121,10,'#ff6a5a','center',MONO,400);
+    // bottom panel
+    ctx.fillStyle='#0f0a18';ctx.fillRect(0,604,W,116);
+    const thrX=30+this.radio.thr*4.8;
+    ctx.fillStyle='#2a2238';rr(30,620,480,26,8);ctx.fill();
+    const vg=ctx.createLinearGradient(30,0,510,0);vg.addColorStop(0,C.jade);vg.addColorStop(.6,C.amber);vg.addColorStop(1,C.red);
+    ctx.fillStyle=vg;rr(30,620,Math.max(6,480*this.vol),26,8);ctx.fill();
+    ctx.fillStyle='#fff';ctx.fillRect(thrX-1.5,614,3,38);
+    txt('driver hears ▼',thrX,610,10,C.cream,thrX>440?'right':'center',MONO,400);
+    txt('VOLUME',34,633,11,'rgba(255,255,255,.75)','left',MONO,400);
+    const can=this.state==='drive'&&!this.heard;
+    ctx.fillStyle=this.holding?'#ff5c78':can?C.red:'#3a2d4d';rr(30,658,480,50,14);ctx.fill();
+    txt(this.holding?'...release to shout!':can?`HOLD & RELEASE → “${this.st.zh}”`:this.state==='brake'||(this.heard&&this.state==='drive')?'He heard you. Brace…':'…',270,683,19,'#fff','center',BODY,900);
+    if(this.state==='result'&&this.res){const r=this.res;ctx.fillStyle='rgba(10,6,18,.92)';rr(60,180,420,120,14);ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=r.c;ctx.stroke();txt(r.big,270,214,28,r.c,'center',DISP,400);para(r.sub,270,252,380,15,C.cream,20,600);txt(`+${r.p}`,450,196,16,C.amber,'right',MONO,400);}
+    hud(this,`⭐ ${this.pts}`,`${Math.min(this.round+1,this.maxR)}/${this.maxR}`);
+  },
+  summary(){const score=Math.min(100,this.pts);return{score,stats:`Perfect stops: ${this.log.filter(p=>p===10).length}/10 · Missed completely: ${this.log.filter(p=>p===0).length}`,verdict:verdict(score,["You're in Shenzhen now. It's nice here, actually.",'You got home. Eventually. Mostly on foot.','Solid. The driver only sighed twice.','The driver wants to hire you as his full-time shouter.'])};}
+};
+
+// =====================================================================
+// 6. NANO FLAT
+// =====================================================================
+const PIECES=[
+  {n:'Bed',e:'🛏️',q:'The landlord calls it a queen.',s:[[0,0],[1,0],[0,1],[1,1],[0,2],[1,2]],c:'#8e6bd9'},
+  {n:'Mahjong table',e:'🀄',q:'Non-negotiable.',s:[[0,0],[1,0],[0,1],[1,1]],c:'#1f9e6e'},
+  {n:'Fridge',e:'🧊',q:'90% bubble tea.',s:[[0,0],[0,1]],c:'#4aa3d8'},
+  {n:'Rice cooker',e:'🍚',q:'Older than you.',s:[[0,0]],c:'#e0b04a'},
+  {n:'Karaoke machine',e:'🎤',q:'The neighbours love it.',s:[[0,0]],c:'#e2528a'},
+  {n:'Sofa',e:'🛋️',q:'Also the dining room.',s:[[0,0],[1,0],[2,0]],c:'#c9744a'},
+  {n:'Sneaker boxes',e:'👟',q:'Never worn. Obviously.',s:[[0,0],[0,1],[1,1]],c:'#5b8def'},
+  {n:'Taobao haul',e:'📦',q:'All arrived on the same day.',s:[[0,0],[1,0],[2,0],[1,1]],c:'#b88a57'},
+  {n:'Dehumidifier',e:'💨',q:'Humidity: 98%. Every day.',s:[[0,0]],c:'#7fb8b0'},
+  {n:'Pet turtle',e:'🐢',q:'His name is "Rent".',s:[[0,0]],c:'#57a85a'},
+  {n:"Mum's boxes",e:'🧸',q:'"Don\'t you DARE throw these out."',s:[[1,0],[2,0],[0,1],[1,1]],c:'#d98b8b'},
+  {n:'Desk',e:'🖥️',q:'Also the kitchen table.',s:[[0,0],[1,0]],c:'#6c7a94'},
+  {n:'Clothes rack',e:'👕',q:'Laundry dries in 4–6 weeks.',s:[[0,0],[0,1]],c:'#9b7fd1'},
+  {n:'Massage chair',e:'💺',q:'Dad insisted.',s:[[0,0],[1,0],[0,1],[1,1]],c:'#a3565e'}
+];
+const FLATS=[
+  {name:'Mong Kok "luxury" studio',sz:'220 sq ft',rent:'HK$15,800/mo',cols:6,rows:6,fixed:[[5,0,'🚽'],[4,0,'🍳']]},
+  {name:'Sham Shui Po subdivided flat',sz:'150 sq ft',rent:'HK$9,800/mo',cols:5,rows:5,fixed:[[4,0,'🚽']]},
+  {name:'Yau Ma Tei "capsule"',sz:'90 sq ft',rent:'HK$6,500/mo',cols:4,rows:4,fixed:[[3,0,'🚽']]}
+];
+const rotS=s=>{const r=s.map(([c,q])=>[-q,c]);const mc=Math.min(...r.map(a=>a[0])),mr=Math.min(...r.map(a=>a[1]));return r.map(([c,q])=>[c-mc,q-mr]);};
+const flat={
+  clock:'23:15',title:'Nano Flat',zh:'納米樓',dur:100,
+  blurb:"Moving day. Your new \"luxury\" studio is 220 sq ft, the toilet is in the kitchen, and all your stuff arrived at once.",
+  how:'Hover or drag to aim, click or tap to place. <b>R</b> or right-click rotates. <b>X</b> sells an item on Carousell (costs 2s). Once it\'s mostly full, <b>Move out</b> to an even smaller flat for more points.',
+  init(){
+    this.fi=0;this.banked=0;this.items=0;this.bag=[];this.loadFlat();this.cur=this.take();this.nx=this.take();this.cursor={c:2,r:3};this.showPrev=false;
+    this.buttons=[{id:'rot',x:24,y:548,w:156,h:44,t:'⟳ Rotate (R)'},{id:'skip',x:192,y:548,w:156,h:44,t:'Carousell it (X)'},{id:'move',x:360,y:548,w:156,h:44,t:'Move out →'}];
+    this.checkFit();
+  },
+  loadFlat(){const f=FLATS[Math.min(this.fi,FLATS.length-1)];this.f=f;this.grid=Array.from({length:f.rows},()=>Array(f.cols).fill(null));for(const[c,r,e]of f.fixed)this.grid[r][c]={fixed:true,e};this.cs=64;this.gx=(W-f.cols*64)/2;this.gy=150+(6-f.rows)*32;this.free=f.cols*f.rows-f.fixed.length;this.filled=0;this.placed=[];},
+  take(){if(!this.bag.length)this.bag=shuffle([...PIECES]);const p=this.bag.pop();return{...p,s:p.s.map(a=>[...a])};},
+  pivot(s){const mc=Math.max(...s.map(a=>a[0]))/2,mr=Math.max(...s.map(a=>a[1]))/2;let b=s[0],bd=1e9;for(const a of s){const d=(a[0]-mc)**2+(a[1]-mr)**2;if(d<bd){bd=d;b=a;}}return b;},
+  cellsAt(s,c,r){const pv=this.pivot(s);return s.map(([a,b])=>[c+a-pv[0],r+b-pv[1]]);},
+  ok(cells){return cells.every(([c,r])=>r>=0&&c>=0&&r<this.f.rows&&c<this.f.cols&&!this.grid[r][c]);},
+  checkFit(){let s=this.cur.s;for(let k=0;k<4;k++){for(let r=0;r<this.f.rows;r++)for(let c=0;c<this.f.cols;c++)if(this.ok(this.cellsAt(s,c,r))){this.noFit=false;return;}s=rotS(s);}this.noFit=true;},
+  advance(){this.cur=this.nx;this.nx=this.take();this.checkFit();},
+  place(){
+    const cells=this.cellsAt(this.cur.s,this.cursor.c,this.cursor.r);
+    if(!this.ok(cells)){sfx.bad();pop("Doesn't fit there!",W/2,124,C.red,15,1.2,'quip');return;}
+    const id=this.placed.length;for(const[c,r]of cells)this.grid[r][c]={id};
+    const cx=cells.reduce((a,b)=>a+b[0],0)/cells.length,cy=cells.reduce((a,b)=>a+b[1],0)/cells.length;
+    const ec=[cx,cy];
+    this.placed.push({cells,e:this.cur.e,color:this.cur.c,ec});this.filled+=cells.length;this.items++;sfx.thunk();
+    pop(`${this.cur.n}: ${this.cur.q}`,W/2,124,C.cream,14,2,'quip');
+    this.advance();
+    if(this.filled>=this.free)this.moveOut(true);
+  },
+  moveOut(auto){
+    if(!auto&&this.filled/this.free<.7){pop('Landlord: "Fill it first. Rent is rent."',W/2,124,C.red,15,1.6,'quip');sfx.bad();return;}
+    const full=this.filled>=this.free;this.banked+=this.filled+(full?10:0);
+    const nf=FLATS[Math.min(this.fi+1,FLATS.length-1)];
+    pop(full?'Perfectly packed! +10':'Rent went up again…',W/2,300,C.jade,22,1.6);
+    pop(`Moving to: ${nf.name}`,W/2,332,C.cream,15,1.8);
+    sfx.chime();this.fi++;this.loadFlat();this.checkFit();
+  },
+  btn(id){if(id==='rot'){this.cur.s=rotS(this.cur.s);sfx.blip();}else if(id==='skip'){this.advance();this.left-=2;sfx.blip();pop('Sold on Carousell for HK$20. −2s',W/2,124,C.amber,15,1.4,'quip');}else this.moveOut(false);},
+  btnAt(x,y){return this.buttons.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);},
+  cellAt(x,y){const c=Math.floor((x-this.gx)/this.cs),r=Math.floor((y-this.gy)/this.cs);return{c,r,inside:c>=0&&r>=0&&c<this.f.cols&&r<this.f.rows};},
+  move(x,y,pt){const q=this.cellAt(x,y);if(q.inside){this.cursor={c:q.c,r:q.r};this.showPrev=true;}else if(pt!=='touch')this.showPrev=false;},
+  down(x,y,pt){if(!this.btnAt(x,y))this.move(x,y,pt);},
+  up(x,y){const b=this.btnAt(x,y);if(b){this.btn(b.id);return;}const q=this.cellAt(x,y);if(q.inside){this.cursor={c:q.c,r:q.r};this.place();}},
+  alt(){this.btn('rot');},
+  key(k){
+    const cu=this.cursor;
+    if(k==='arrowleft'){cu.c=Math.max(0,cu.c-1);this.showPrev=true;}
+    else if(k==='arrowright'){cu.c=Math.min(this.f.cols-1,cu.c+1);this.showPrev=true;}
+    else if(k==='arrowup'){cu.r=Math.max(0,cu.r-1);this.showPrev=true;}
+    else if(k==='arrowdown'){cu.r=Math.min(this.f.rows-1,cu.r+1);this.showPrev=true;}
+    else if(k===' '||k==='enter'){this.showPrev=true;this.place();}
+    else if(k==='r')this.btn('rot');else if(k==='x')this.btn('skip');else if(k==='m')this.btn('move');
+  },
+  update(){},
+  mini(p,x,y,cs){const mc=Math.max(...p.s.map(a=>a[0]))+1,mr=Math.max(...p.s.map(a=>a[1]))+1;const ox=x-mc*cs/2,oy=y-mr*cs/2;ctx.fillStyle=p.c;for(const[c,r]of p.s){rr(ox+c*cs+1,oy+r*cs+1,cs-2,cs-2,3);ctx.fill();}emo(p.e,x,y,Math.min(30,cs*1.3));},
+  draw(){
+    const f=this.f,cs=this.cs,gx=this.gx,gy=this.gy;
+    ctx.fillStyle='#17111f';ctx.fillRect(0,0,W,H);
+    txt(f.name,W/2,78,20,C.cream,'center',BODY,900);
+    txt(`${f.sz} · ${f.rent} · "sea view"`,W/2,101,13,C.dim,'center',MONO,400);
+    txt(`Filled ${this.filled}/${this.free}`,gx,gy-14,13,C.amber,'left',MONO,400);
+    txt(`Flat ${this.fi+1}`,gx+f.cols*cs,gy-14,13,C.dim,'right',MONO,400);
+    ctx.fillStyle='#2a1f19';rr(gx-8,gy-8,f.cols*cs+16,f.rows*cs+16,10);ctx.fill();ctx.strokeStyle='#cbb89a';ctx.lineWidth=4;ctx.stroke();
+    for(let r=0;r<f.rows;r++)for(let c=0;c<f.cols;c++){ctx.fillStyle=(r+c)%2?'#4a3a2e':'#443428';ctx.fillRect(gx+c*cs,gy+r*cs,cs,cs);const g=this.grid[r][c];if(g&&g.fixed){ctx.fillStyle='#24363d';rr(gx+c*cs+3,gy+r*cs+3,cs-6,cs-6,8);ctx.fill();emo(g.e,gx+c*cs+cs/2,gy+r*cs+cs/2,30);}}
+    for(const p of this.placed){ctx.fillStyle=p.color;const has=(a,b)=>p.cells.some(q=>q[0]===a&&q[1]===b);
+      for(const[c,r]of p.cells){const x=gx+c*cs,y=gy+r*cs;rr(x+3,y+3,cs-6,cs-6,9);ctx.fill();if(has(c+1,r))ctx.fillRect(x+cs-6,y+3,12,cs-6);if(has(c,r+1))ctx.fillRect(x+3,y+cs-6,cs-6,12);}
+      emo(p.e,gx+p.ec[0]*cs+cs/2,gy+p.ec[1]*cs+cs/2,34);}
+    if(this.showPrev&&mode==='play'){const cells=this.cellsAt(this.cur.s,this.cursor.c,this.cursor.r),v=this.ok(cells);ctx.globalAlpha=.6;ctx.fillStyle=v?this.cur.c:'#ff3355';for(const[c,r]of cells){if(c<0||r<0||c>=f.cols||r>=f.rows)continue;rr(gx+c*cs+5,gy+r*cs+5,cs-10,cs-10,9);ctx.fill();}ctx.globalAlpha=1;emo(this.cur.e,gx+this.cursor.c*cs+cs/2,gy+this.cursor.r*cs+cs/2,30);}
+    for(const b of this.buttons){const dis=b.id==='move'&&this.filled/this.free<.7;const hot=b.id==='skip'&&this.noFit;ctx.globalAlpha=dis?.4:1;ctx.fillStyle=hot?'#5a2030':'#2a2040';rr(b.x,b.y,b.w,b.h,10);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=hot?C.red:'#4d3f6b';ctx.stroke();txt(b.t,b.x+b.w/2,b.y+b.h/2,14,C.cream,'center',BODY,700);ctx.globalAlpha=1;}
+    ctx.fillStyle='#221933';rr(16,604,508,108,12);ctx.fill();
+    txt('NOW',32,622,10,C.dim,'left',MONO,400);
+    this.mini(this.cur,80,664,18);
+    txt(this.cur.n,140,640,18,C.cream,'left',BODY,900);
+    para(this.cur.q,140,664,260,13,C.dim,18,500,BODY,'left');
+    if(this.noFit)txt("Won't fit anywhere. Carousell it or move out.",140,694,12,C.red,'left',BODY,700);
+    txt('NEXT',472,622,10,C.dim,'center',MONO,400);
+    this.mini(this.nx,472,666,11);
+    hud(this,`📦 ${this.banked+this.filled}`);
+  },
+  summary(){const tot=this.banked+this.filled;const score=Math.min(100,Math.round(tot*1.25));return{score,stats:`Items crammed in: ${this.items} · Flats lived in: ${this.fi+1}`,verdict:verdict(score,['Most of your stuff is on Carousell now. Minimalism, but sad.','Cosy. Which is estate-agent for "tiny".','Pro packer. You could fit a mahjong table in a lift.','Tetris grandmaster. Developers want you to design their 80 sq ft flats.'])};}
+};
+
+// =====================================================================
+// FLOW
+// =====================================================================
+const STAGES=[mtr,cafe,dimsum,drip,minibus,flat];
+const RANKS=[
+  {max:.25,e:'🧳',name:'Lost tourist in Tsim Sha Tsui',line:'You asked someone for directions to the Peak. While standing on it.'},
+  {max:.45,e:'🥂',name:'Fresh expat',line:'You say "m goi" with total confidence and the wrong tone.'},
+  {max:.65,e:'🐙',name:'Octopus-card local',line:'Always topped up, never flustered. Respect.'},
+  {max:.82,e:'☕',name:'Cha chaan teng regular',line:"The waiter nods at you. In Hong Kong, that's basically a hug."},
+  {max:9,e:'👵',name:'Final boss: The Auntie',line:"You don't find seats. Seats find you. The trolley is part of you now."}
+];
+let mode='title',cur=null,stageIdx=0,results=[];
+function bind(sel,fn){const el=ov.querySelector(sel);if(el)el.addEventListener('click',fn);}
+function focusPrimary(){const b=ov.querySelector('[data-primary]');if(b)try{b.focus({preventScroll:true});}catch(e){}}
+function soundLabel(){return muted?'Sound: off':'Sound: on';}
+function toggleSound(e){muted=!muted;e.currentTarget.textContent=soundLabel();}
+function getBest(){try{return +localStorage.getItem('hks-best')||0;}catch(e){return 0;}}
+
+function showTitle(){
+  mode='title';cur=null;const best=getBest();
+  ov.innerHTML=`<div class="card"><p class="eyebrow">香港一日 · One very normal day</p><h1>Hong Kong<br>Speedrun</h1><p class="lede">Six rounds of one ordinary day in the world's most efficient city. About ten minutes. Aunties included.</p><ul class="day">${STAGES.map(s=>`<li><span class="clk">${s.clock}</span><span>${s.title}</span><span class="zh">${s.zh}</span></li>`).join('')}</ul><div class="row"><button class="btn primary" id="go" data-primary>嘟! Tap in to start</button><button class="btn ghost" id="snd">${soundLabel()}</button></div>${best?`<p class="small">Your best day: ${best} / 600</p>`:'<p class="small">Keyboard or touch. Sound recommended.</p>'}</div>`;
+  ov.hidden=false;bind('#go',()=>{initAudio();sfx.octopus();results=[];startIntro(0);});bind('#snd',toggleSound);focusPrimary();
+}
+function startIntro(i){
+  stageIdx=i;cur=STAGES[i];cur.left=cur.dur;cur.elapsed=0;cur.finished=false;pops=[];pointer.down=false;cur.init();mode='intro';
+  ov.innerHTML=`<div class="card"><div class="meta"><span class="clk big">${cur.clock}</span><span class="rnd">Round ${i+1} of ${STAGES.length}</span></div><h2>${cur.title}</h2><p class="zhbig">${cur.zh}</p><p class="lede">${cur.blurb}</p><p class="how">${cur.how}</p><button class="btn primary" id="go" data-primary>出發! Go</button></div>`;
+  ov.hidden=false;bind('#go',()=>{initAudio();ov.hidden=true;mode='play';sfx.octopus();try{cvs.focus();}catch(e){}});focusPrimary();
+}
+function endStage(){
+  mode='between';cur.holding=false;const r=cur.summary();results[stageIdx]={t:cur.title,score:r.score};
+  const total=results.reduce((a,b)=>a+(b?b.score:0),0),last=stageIdx===STAGES.length-1,nx=STAGES[stageIdx+1];
+  sfx.chime();
+  ov.innerHTML=`<div class="card"><p class="eyebrow">${cur.clock} · Round ${stageIdx+1} done</p><h2>${cur.title}</h2><div class="score"><span class="n">${r.score}</span><span class="d">/ 100</span></div><p class="stats">${r.stats}</p><p class="verdict">“${r.verdict}”</p><p class="small">Day total so far: ${total} / ${(stageIdx+1)*100}</p><button class="btn primary" id="go" data-primary>${last?'See how Hong Kong you are →':`Next: ${nx.clock} ${nx.title} →`}</button></div>`;
+  ov.hidden=false;bind('#go',()=>last?showFinal():startIntro(stageIdx+1));focusPrimary();
+}
+function showFinal(){
+  mode='final';cur=null;const total=results.reduce((a,b)=>a+b.score,0),rk=RANKS.find(r=>total/600<r.max);
+  let best=getBest();const nb=total>best;if(nb){try{localStorage.setItem('hks-best',String(total));}catch(e){}}
+  ov.innerHTML=`<div class="card"><p class="eyebrow">23:59 · Day complete${nb&&best?' · New best!':''}</p><p class="small">Your Hong Kong rank</p><h2 class="rank">${rk.e} ${rk.name}</h2><p class="verdict">${rk.line}</p><div class="score"><span class="n">${total}</span><span class="d">/ 600</span></div><ul class="bars">${results.map((r,i)=>`<li><span><span class="clk">${STAGES[i].clock}</span> ${r.t}</span><span class="bar"><i style="width:${r.score}%"></i></span><b>${r.score}</b></li>`).join('')}</ul><div class="row"><button class="btn primary" id="again" data-primary>Do the whole day again</button><button class="btn ghost" id="copy">Copy my score</button></div></div>`;
+  ov.hidden=false;
+  bind('#again',()=>{results=[];startIntro(0);});
+  bind('#copy',e=>{const b=e.currentTarget;const s=`I scored ${total}/600 on Hong Kong Speedrun. Rank: ${rk.name} ${rk.e}`;try{navigator.clipboard.writeText(s).then(()=>b.textContent='Copied!',()=>b.textContent='Copy blocked. Screenshot it!');}catch(err){b.textContent='Copy blocked. Screenshot it!';}});
+  focusPrimary();
+}
+
+// ---------- attract screen ----------
+let attract=null;
+const rain=Array.from({length:90},()=>({x:rand(0,W),y:rand(0,H),v:rand(380,640)}));
+function paintCity(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#07040f');g.addColorStop(.55,'#241037');g.addColorStop(1,'#120c1c');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  let x=-10;while(x<W){const w=rand(30,70),h=rand(180,460);ctx.fillStyle=pick(['#1a1328','#20182f','#161a2a']);ctx.fillRect(x,560-h,w,h);for(let yy=575-h;yy<550;yy+=14)for(let xx=x+5;xx<x+w-6;xx+=10)if(Math.random()<.3){ctx.fillStyle=pick(['rgba(255,216,138,.55)','rgba(159,227,255,.45)','rgba(255,179,199,.45)']);ctx.fillRect(xx,yy,5,7);}x+=w+rand(2,8);}
+  for(const[s,xx,yy,c] of [['酒樓',60,190,C.red],['按摩',150,250,C.pink],['當舖',400,210,C.amber],['茶餐廳',480,280,C.jade]])neonV(s,xx,yy,c);
+  ctx.fillStyle='#0a0714';ctx.fillRect(0,560,W,160);
+  for(let i=0;i<40;i++){ctx.fillStyle=pick(['rgba(255,51,85,.22)','rgba(255,182,39,.2)','rgba(25,195,154,.18)','rgba(255,79,163,.2)']);ctx.fillRect(rand(0,W),rand(572,700),rand(20,70),2);}
+  const h2=ctx.createLinearGradient(0,560,0,H);h2.addColorStop(0,'rgba(10,7,20,.4)');h2.addColorStop(1,'rgba(10,7,20,1)');ctx.fillStyle=h2;ctx.fillRect(0,560,W,160);
+}
+function drawAttract(dt){
+  if(!attract)attract=makeLayer(paintCity);
+  ctx.drawImage(attract,0,0,W,H);
+  ctx.strokeStyle='rgba(170,205,255,.35)';ctx.lineWidth=1;ctx.beginPath();
+  for(const r of rain){r.y+=r.v*dt;r.x-=r.v*dt*.08;if(r.y>H){r.y=-10;r.x=rand(0,W+40);}ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+2,r.y-12);}
+  ctx.stroke();
+}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{attract=null;});
+
+// ---------- events ----------
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(!ov.hidden){if((k==='enter'||k===' ')&&document.activeElement&&document.activeElement.tagName!=='BUTTON'){e.preventDefault();const b=ov.querySelector('[data-primary]');if(b)b.click();}return;}
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+  keys[k]=true;
+  if(mode==='play'&&cur){if(e.repeat&&(k===' '||k==='enter'))return;if(k===' ')cur.press?.();cur.key?.(k,true);}
+});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();keys[k]=false;if(mode==='play'&&cur&&k===' ')cur.release?.();});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;pointer.down=false;});
+cvs.addEventListener('contextmenu',e=>e.preventDefault());
+cvs.addEventListener('pointerdown',e=>{
+  const p=toL(e);pointer.x=p.x;pointer.y=p.y;pointer.type=e.pointerType;
+  if(mode!=='play'||!cur)return;
+  if(e.button===2){cur.alt?.();return;}
+  pointer.down=true;try{cvs.setPointerCapture(e.pointerId);}catch(err){}
+  cur.down?.(p.x,p.y,e.pointerType);cur.press?.();
+});
+cvs.addEventListener('pointermove',e=>{const p=toL(e);pointer.x=p.x;pointer.y=p.y;if(mode==='play'&&cur)cur.move?.(p.x,p.y,e.pointerType);});
+function pUp(e){if(e.button===2)return;const was=pointer.down;pointer.down=false;if(mode!=='play'||!cur||!was)return;const p=toL(e);cur.up?.(p.x,p.y,e.pointerType);cur.release?.();}
+cvs.addEventListener('pointerup',pUp);
+cvs.addEventListener('pointercancel',e=>{pointer.down=false;if(mode==='play'&&cur)cur.release?.();});
+
+// ---------- loop ----------
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  ctx.setTransform(viewK,0,0,viewK,0,0);ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shake>0){shake-=dt;ctx.translate(rand(-5,5),rand(-5,5));}
+  if(cur&&(mode==='play'||mode==='intro'||mode==='between')){
+    if(mode==='play'){cur.elapsed+=dt;cur.left-=dt;cur.update(dt);updPops(dt);}
+    cur.draw();drawPops();
+    if(mode==='play'&&(cur.left<=0||cur.finished))endStage();
+  }else drawAttract(dt);
+  ctx.restore();
+  requestAnimationFrame(frame);
+}
+showTitle();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
