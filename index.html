@@ -25,13 +25,17 @@
   .ov[hidden]{display:none}
   .card{width:100%;max-height:100%;overflow:auto;box-sizing:border-box;background:var(--panel);border:.4cqw solid var(--red);border-radius:3cqw;padding:5.5cqw 6cqw;box-shadow:0 0 5cqw rgba(255,51,85,.35),inset 0 0 3cqw rgba(255,51,85,.12);display:flex;flex-direction:column;gap:2.6cqw}
   .eyebrow{font:400 2.8cqw/1.2 "Share Tech Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0}
-  h1{font:400 12.4cqw/.92 "Bungee","Arial Black",Impact,sans-serif;color:#ffe3e8;margin:0;text-shadow:0 0 1cqw #ff3355,0 0 3cqw #ff3355,0 0 7cqw rgba(255,51,85,.6);animation:flick 7s infinite}
+  h1{font:400 11cqw/.92 "Bungee","Arial Black",Impact,sans-serif;color:#ffe3e8;margin:0;text-shadow:0 0 1cqw #ff3355,0 0 3cqw #ff3355,0 0 7cqw rgba(255,51,85,.6);animation:flick 7s infinite}
   h2{font:400 7.2cqw/1.02 "Bungee","Arial Black",Impact,sans-serif;color:var(--cream);margin:0;text-wrap:balance}
   .lede{font:500 3.5cqw/1.45 "Noto Sans HK",system-ui,sans-serif;margin:0;color:var(--cream)}
   .how{font:400 3.15cqw/1.55 "Noto Sans HK",system-ui,sans-serif;color:var(--dim);margin:0;border-top:1px dashed #ffffff26;padding-top:2.4cqw}
   .how b{color:var(--cream);font-weight:700}
-  .day{list-style:none;margin:0;padding:0;display:grid;gap:1.1cqw}
-  .day li{display:grid;grid-template-columns:12cqw 1fr auto;align-items:baseline;gap:2cqw;font-size:3.4cqw;padding-bottom:1.1cqw;border-bottom:1px solid #ffffff12}
+  .day{list-style:none;margin:0;padding:0;display:grid;gap:.5cqw}
+  .day li{border-bottom:1px solid #ffffff12}
+  .day button{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:12cqw 1fr auto auto;align-items:baseline;gap:2cqw;font-size:3.4cqw;padding:.6cqw 1.2cqw;border-radius:1.4cqw;color:var(--cream)}
+  .day button:hover,.day button:focus-visible{background:#ff335522}
+  .day button:focus-visible{outline:.5cqw solid var(--cyan)}
+  .day .solo{font:400 2.6cqw 'Share Tech Mono',ui-monospace,monospace;color:var(--red);letter-spacing:.06em}
   .clk{font-family:"Share Tech Mono",ui-monospace,monospace;color:var(--amber);font-variant-numeric:tabular-nums}
   .zh{color:var(--dim)}
   .row{display:flex;gap:2.4cqw;flex-wrap:wrap;margin-top:1cqw}
@@ -754,7 +758,7 @@ const RANKS=[
   {max:.82,e:'☕',name:'Cha chaan teng regular',line:"The waiter nods at you. In Hong Kong, that's basically a hug."},
   {max:9,e:'👵',name:'Final boss: The Auntie',line:"You don't find seats. Seats find you. The trolley is part of you now."}
 ];
-let mode='title',cur=null,stageIdx=0,results=[];
+let mode='title',cur=null,stageIdx=0,results=[],solo=false;
 function bind(sel,fn){const el=ov.querySelector(sel);if(el)el.addEventListener('click',fn);}
 function focusPrimary(){const b=ov.querySelector('[data-primary]');if(b)try{b.focus({preventScroll:true});}catch(e){}}
 function soundLabel(){return muted?'Sound: off':'Sound: on';}
@@ -763,18 +767,24 @@ function getBest(){try{return +localStorage.getItem('hks-best')||0;}catch(e){ret
 
 function showTitle(){
   mode='title';cur=null;const best=getBest();
-  ov.innerHTML=`<div class="card"><p class="eyebrow">香港一日 · One very normal day</p><h1>Hong Kong<br>Speedrun</h1><p class="lede">Six rounds of one ordinary day in the world's most efficient city. About ten minutes. Aunties included.</p><ul class="day">${STAGES.map(s=>`<li><span class="clk">${s.clock}</span><span>${s.title}</span><span class="zh">${s.zh}</span></li>`).join('')}</ul><div class="row"><button class="btn primary" id="go" data-primary>嘟! Tap in to start</button><button class="btn ghost" id="snd">${soundLabel()}</button></div>${best?`<p class="small">Your best day: ${best} / 600</p>`:'<p class="small">Keyboard or touch. Sound recommended.</p>'}</div>`;
-  ov.hidden=false;bind('#go',()=>{initAudio();sfx.octopus();results=[];startIntro(0);});bind('#snd',toggleSound);focusPrimary();
+  ov.innerHTML=`<div class="card"><p class="eyebrow">香港一日 · One very normal day</p><h1>Hong Kong<br>Speedrun</h1><p class="lede">Six rounds of one ordinary day in the world's most efficient city. About ten minutes. Aunties included.</p><p class="small">Play the whole day, or tap a round to play just that one.</p><ul class="day">${STAGES.map((s,i)=>`<li><button data-solo="${i}" aria-label="Play only ${s.title}"><span class="clk">${s.clock}</span><span>${s.title}</span><span class="zh">${s.zh}</span><span class="solo">PLAY ▸</span></button></li>`).join('')}</ul><div class="row"><button class="btn primary" id="go" data-primary>嘟! Tap in to start</button><button class="btn ghost" id="snd">${soundLabel()}</button></div>${best?`<p class="small">Your best day: ${best} / 600</p>`:'<p class="small">Keyboard or touch. Sound recommended.</p>'}</div>`;
+  ov.hidden=false;bind('#go',()=>{initAudio();sfx.octopus();results=[];solo=false;startIntro(0);});bind('#snd',toggleSound);
+  ov.querySelectorAll('[data-solo]').forEach(b=>b.addEventListener('click',()=>{initAudio();sfx.octopus();results=[];solo=true;startIntro(+b.dataset.solo);}));
+  focusPrimary();
 }
 function startIntro(i){
   stageIdx=i;cur=STAGES[i];cur.left=cur.dur;cur.elapsed=0;cur.finished=false;pops=[];pointer.down=false;cur.init();mode='intro';
-  ov.innerHTML=`<div class="card"><div class="meta"><span class="clk big">${cur.clock}</span><span class="rnd">Round ${i+1} of ${STAGES.length}</span></div><h2>${cur.title}</h2><p class="zhbig">${cur.zh}</p><p class="lede">${cur.blurb}</p><p class="how">${cur.how}</p><button class="btn primary" id="go" data-primary>出發! Go</button></div>`;
-  ov.hidden=false;bind('#go',()=>{initAudio();ov.hidden=true;mode='play';sfx.octopus();try{cvs.focus();}catch(e){}});focusPrimary();
+  ov.innerHTML=`<div class="card"><div class="meta"><span class="clk big">${cur.clock}</span><span class="rnd">${solo?'Solo round':`Round ${i+1} of ${STAGES.length}`}</span></div><h2>${cur.title}</h2><p class="zhbig">${cur.zh}</p><p class="lede">${cur.blurb}</p><p class="how">${cur.how}</p><div class="row"><button class="btn primary" id="go" data-primary>出發! Go</button><button class="btn ghost" id="menu">← All rounds</button></div></div>`;
+  ov.hidden=false;bind('#go',()=>{initAudio();ov.hidden=true;mode='play';sfx.octopus();try{cvs.focus();}catch(e){}});bind('#menu',showTitle);focusPrimary();
 }
 function endStage(){
   mode='between';cur.holding=false;const r=cur.summary();results[stageIdx]={t:cur.title,score:r.score};
   const total=results.reduce((a,b)=>a+(b?b.score:0),0),last=stageIdx===STAGES.length-1,nx=STAGES[stageIdx+1];
   sfx.chime();
+  if(solo){
+    ov.innerHTML=`<div class="card"><p class="eyebrow">${cur.clock} · Solo round done</p><h2>${cur.title}</h2><div class="score"><span class="n">${r.score}</span><span class="d">/ 100</span></div><p class="stats">${r.stats}</p><p class="verdict">“${r.verdict}”</p><div class="row"><button class="btn primary" id="go" data-primary>Play it again</button><button class="btn ghost" id="menu">Pick another round</button></div></div>`;
+    ov.hidden=false;bind('#go',()=>startIntro(stageIdx));bind('#menu',showTitle);focusPrimary();return;
+  }
   ov.innerHTML=`<div class="card"><p class="eyebrow">${cur.clock} · Round ${stageIdx+1} done</p><h2>${cur.title}</h2><div class="score"><span class="n">${r.score}</span><span class="d">/ 100</span></div><p class="stats">${r.stats}</p><p class="verdict">“${r.verdict}”</p><p class="small">Day total so far: ${total} / ${(stageIdx+1)*100}</p><button class="btn primary" id="go" data-primary>${last?'See how Hong Kong you are →':`Next: ${nx.clock} ${nx.title} →`}</button></div>`;
   ov.hidden=false;bind('#go',()=>last?showFinal():startIntro(stageIdx+1));focusPrimary();
 }
@@ -783,7 +793,7 @@ function showFinal(){
   let best=getBest();const nb=total>best;if(nb){try{localStorage.setItem('hks-best',String(total));}catch(e){}}
   ov.innerHTML=`<div class="card"><p class="eyebrow">23:59 · Day complete${nb&&best?' · New best!':''}</p><p class="small">Your Hong Kong rank</p><h2 class="rank">${rk.e} ${rk.name}</h2><p class="verdict">${rk.line}</p><div class="score"><span class="n">${total}</span><span class="d">/ 600</span></div><ul class="bars">${results.map((r,i)=>`<li><span><span class="clk">${STAGES[i].clock}</span> ${r.t}</span><span class="bar"><i style="width:${r.score}%"></i></span><b>${r.score}</b></li>`).join('')}</ul><div class="row"><button class="btn primary" id="again" data-primary>Do the whole day again</button><button class="btn ghost" id="copy">Copy my score</button></div></div>`;
   ov.hidden=false;
-  bind('#again',()=>{results=[];startIntro(0);});
+  bind('#again',()=>{results=[];solo=false;startIntro(0);});
   bind('#copy',e=>{const b=e.currentTarget;const s=`I scored ${total}/600 on Hong Kong Speedrun. Rank: ${rk.name} ${rk.e}`;try{navigator.clipboard.writeText(s).then(()=>b.textContent='Copied!',()=>b.textContent='Copy blocked. Screenshot it!');}catch(err){b.textContent='Copy blocked. Screenshot it!';}});
   focusPrimary();
 }
